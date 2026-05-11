@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SekolahMart - Belanja Sekolah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+<div id="app" class="min-h-screen"></div>
+
+<script>
+// ========== DATA ==========
+let users = [
+    { id: 1, name: "Ustadz Abu Bakar", email: "ustadz1@mail.com", password: "123", role: "member", discount: 20 },
+    { id: 2, name: "Ustadzah Fatimah", email: "ustadz2@mail.com", password: "123", role: "member", discount: 20 },
+    { id: 3, name: "Ustadz Zaki", email: "ustadz3@mail.com", password: "123", role: "member", discount: 20 },
+    { id: 4, name: "Ustadz Rahman", email: "ustadz4@mail.com", password: "123", role: "member", discount: 20 },
+    { id: 5, name: "Ustadz Hafidz", email: "ustadz5@mail.com", password: "123", role: "member", discount: 20 },
+    { id: 99, name: "Admin", email: "admin@sekolah.com", password: "admin123", role: "admin", discount: 0 }
+];
+
+let products = [
+    { id: 1, name: "Buku Tulis", price: 5000, stock: 100 },
+    { id: 2, name: "Pensil 2B", price: 3000, stock: 200 },
+    { id: 3, name: "Penghapus", price: 2000, stock: 150 },
+    { id: 4, name: "Penggaris", price: 4000, stock: 80 },
+    { id: 5, name: "Ransel", price: 85000, stock: 20 }
+];
+
+let transactions = [];
+let deliveries = [];
+let cart = [];
+let currentUser = null;
+let currentPage = "landing";
+
+// ========== FUNGSI ==========
+function saveData() {
+    localStorage.setItem("sekolahmart_users", JSON.stringify(users));
+    localStorage.setItem("sekolahmart_products", JSON.stringify(products));
+    localStorage.setItem("sekolahmart_transactions", JSON.stringify(transactions));
+    localStorage.setItem("sekolahmart_deliveries", JSON.stringify(deliveries));
+}
+
+function loadData() {
+    let u = localStorage.getItem("sekolahmart_users");
+    let p = localStorage.getItem("sekolahmart_products");
+    let t = localStorage.getItem("sekolahmart_transactions");
+    let d = localStorage.getItem("sekolahmart_deliveries");
+    if (u) users = JSON.parse(u);
+    if (p) products = JSON.parse(p);
+    if (t) transactions = JSON.parse(t);
+    if (d) deliveries = JSON.parse(d);
+}
+loadData();
+
+function render() {
+    let app = document.getElementById("app");
+    if (!currentUser) {
+        if (currentPage === "landing") renderLanding(app);
+        else if (currentPage === "login") renderLogin(app);
+        else renderLanding(app);
+    } else {
+        if (currentPage === "home") renderHome(app);
+        else if (currentPage === "cart") renderCartPage(app);
+        else if (currentPage === "tracking") renderTracking(app);
+        else if (currentPage === "profile") renderProfile(app);
+        else if (currentPage === "admin" && currentUser.role === "admin") renderAdmin(app);
+        else renderHome(app);
+    }
+}
+
+// ========== LANDING PAGE ==========
+function renderLanding(container) {
+    container.innerHTML = `
+        <div class="bg-blue-600 min-h-screen">
+            <div class="container mx-auto px-4 py-8">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-white">📚 SekolahMart</h1>
+                    <button onclick="goToLogin()" class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold">Login / Daftar</button>
+                </div>
+                <div class="text-center text-white py-20">
+                    <h2 class="text-5xl font-bold mb-4">Toko Perlengkapan Sekolah</h2>
+                    <p class="text-xl mb-8">Belanja mudah, antar cepat, diskon untuk member Ustadz!</p>
+                    <button onclick="goToLogin()" class="bg-yellow-400 text-blue-900 px-8 py-3 rounded-full text-lg font-bold">Mulai Belanja →</button>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6 text-white">
+                    <div class="bg-white/20 p-6 rounded-xl text-center">📦 50+ Produk</div>
+                    <div class="bg-white/20 p-6 rounded-xl text-center">🚚 Pesan Antar & Tracking</div>
+                    <div class="bg-white/20 p-6 rounded-xl text-center">🏅 Diskon 20% untuk 5 Ustadz</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ========== LOGIN PAGE ==========
+function renderLogin(container) {
+    container.innerHTML = `
+        <div class="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-700">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+                <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">SekolahMart</h1>
+                
+                <div id="loginBox">
+                    <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 border rounded-lg mb-3">
+                    <input type="password" id="loginPass" placeholder="Password" class="w-full p-3 border rounded-lg mb-4">
+                    <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold">Login</button>
+                    <p class="text-center mt-4">Belum punya akun? <button onclick="showRegister()" class="text-blue-600">Daftar</button></p>
+                </div>
+                
+                <div id="registerBox" style="display:none">
+                    <input type="text" id="regName" placeholder="Nama" class="w-full p-3 border rounded-lg mb-3">
+                    <input type="email" id="regEmail" placeholder="Email" class="w-full p-3 border rounded-lg mb-3">
+                    <input type="password" id="regPass" placeholder="Password" class="w-full p-3 border rounded-lg mb-4">
+                    <button onclick="doRegister()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold">Daftar</button>
+                    <p class="text-center mt-4">Sudah punya akun? <button onclick="showLogin()" class="text-blue-600">Login</button></p>
+                </div>
+                
+                <div class="mt-6 p-3 bg-gray-100 rounded-lg text-sm">
+                    <p class="font-bold">Demo Akun:</p>
+                    <p>Member Ustadz: ustadz1@mail.com / 123</p>
+                    <p>Admin: admin@sekolah.com / admin123</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+window.goToLogin = function() {
+    currentPage = "login";
+    render();
+};
+
+window.showRegister = function() {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("registerBox").style.display = "block";
+};
+
+window.showLogin = function() {
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("registerBox").style.display = "none";
+};
+
+window.doLogin = function() {
+    let email = document.getElementById("loginEmail").value;
+    let pass = document.getElementById("loginPass").value;
+    let user = users.find(u => u.email === email && u.password === pass);
+    if (user) {
+        currentUser = user;
+        cart = [];
+        currentPage = "home";
+        render();
+    } else {
+        alert("Login gagal! Coba: ustadz1@mail.com / 123");
+    }
+};
+
+window.doRegister = function() {
+    let name = document.getElementById("regName").value;
+    let email = document.getElementById("regEmail").value;
+    let pass = document.getElementById("regPass").value;
+    if (!name || !email || !pass) {
+        alert("Isi semua data!");
+        return;
+    }
+    if (users.find(u => u.email === email)) {
+        alert("Email sudah terdaftar!");
+        return;
+    }
+    let newUser = {
+        id: Date.now(),
+        name: name,
+        email: email,
+        password: pass,
+        role: "member",
+        discount: 0
+    };
+    users.push(newUser);
+    saveData();
+    alert("Registrasi berhasil! Silakan login.");
+    showLogin();
+};
+
+// ========== HOME PAGE ==========
+function renderHome(container) {
+    let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+    let disc = currentUser.discount || 0;
+    let total = subtotal - (subtotal * disc / 100);
+    
+    container.innerHTML = `
+        <div class="bg-white shadow-md p-4 sticky top-0 z-10">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-blue-600">📚 SekolahMart</h1>
+                <div class="flex gap-3">
+                    <span class="bg-gray-100 px-3 py-1 rounded">👤 ${currentUser.name} ${currentUser.discount > 0 ? '🏅 Member' : ''}</span>
+                    <button onclick="goToCart()" class="bg-blue-500 text-white px-4 py-1 rounded relative">🛒 Cart (${cart.reduce((s,i)=>s+i.qty,0)})</button>
+                    <button onclick="goToTracking()" class="bg-gray-500 text-white px-4 py-1 rounded">🚚 Tracking</button>
+                    <button onclick="goToProfile()" class="bg-purple-500 text-white px-4 py-1 rounded">👤 Profil</button>
+                    ${currentUser.role === 'admin' ? '<button onclick="goToAdmin()" class="bg-red-500 text-white px-4 py-1 rounded">⚙️ Admin</button>' : ''}
+                    <button onclick="logout()" class="bg-gray-300 px-4 py-1 rounded">Logout</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="md:col-span-2">
+                    <h2 class="text-2xl font-bold mb-4">📦 Produk</h2>
+                    <div class="grid sm:grid-cols-2 gap-4" id="productList"></div>
+                </div>
+                <div>
+                    <div class="bg-white rounded-xl shadow p-4 sticky top-24">
+                        <h3 class="font-bold text-lg">🛒 Ringkasan</h3>
+                        <div id="cartSummary"></div>
+                        <div class="border-t pt-2 mt-2">
+                            <p>Subtotal: Rp ${subtotal.toLocaleString()}</p>
+                            ${disc > 0 ? `<p class="text-green-600">Diskon Member ${disc}%: -Rp ${(subtotal * disc / 100).toLocaleString()}</p>` : ''}
+                            <p class="font-bold">Total: Rp ${total.toLocaleString()}</p>
+                        </div>
+                        <button onclick="goToCart()" class="w-full bg-green-600 text-white py-2 rounded-lg mt-3">Lanjut ke Transaksi →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    let productDiv = document.getElementById("productList");
+    productDiv.innerHTML = products.map(p => `
+        <div class="bg-white rounded-xl shadow p-4">
+            <h3 class="font-bold text-lg">${p.name}</h3>
+            <p class="text-blue-600 font-bold">Rp ${p.price.toLocaleString()}</p>
+            <p class="text-sm text-gray-500">Stok: ${p.stock}</p>
+            <button onclick="addToCart(${p.id})" class="mt-2 w-full bg-indigo-500 text-white py-2 rounded" ${p.stock <= 0 ? 'disabled' : ''}>Tambah ke Keranjang</button>
+        </div>
+    `).join("");
+    
+    let cartDiv = document.getElementById("cartSummary");
+    if (cart.length === 0) {
+        cartDiv.innerHTML = "<p class='text-gray-400 text-center py-4'>Keranjang kosong</p>";
+    } else {
+        cartDiv.innerHTML = cart.map(item => `
+            <div class="flex justify-between py-1 text-sm">
+                <span>${item.name} x${item.qty}</span>
+                <span>Rp ${(item.price * item.qty).toLocaleString()}</span>
+            </div>
+        `).join("");
+    }
+}
+
+window.addToCart = function(productId) {
+    let product = products.find(p => p.id === productId);
+    if (!product) return;
+    if (product.stock <= 0) {
+        alert("Stok habis!");
+        return;
+    }
+    let exist = cart.find(c => c.id === productId);
+    if (exist) {
+        exist.qty++;
+    } else {
+        cart.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            qty: 1
+        });
+    }
+    render();
+};
+
+window.goToCart = function() {
+    if (cart.length === 0) {
+        alert("Keranjang masih kosong!");
+        return;
+    }
+    currentPage = "cart";
+    render();
+};
+
+// ========== CART / TRANSACTION PAGE ==========
+function renderCartPage(container) {
+    let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+    let disc = currentUser.discount || 0;
+    let afterDisc = subtotal - (subtotal * disc / 100);
+    
+    container.innerHTML = `
+        <div class="container mx-auto px-4 py-8 max-w-2xl">
+            <button onclick="goBackHome()" class="text-blue-600 mb-4">← Kembali ke Toko</button>
+            <div class="bg-white rounded-xl shadow p-6">
+                <h2 class="text-2xl font-bold mb-4">🧾 Detail Transaksi</h2>
+                
+                <div class="border-b pb-3">
+                    ${cart.map(item => `
+                        <div class="flex justify-between py-2">
+                            <span>${item.name} x${item.qty}</span>
+                            <span>Rp ${(item.price * item.qty).toLocaleString()}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="mt-3">
+                    <p>Subtotal: Rp ${subtotal.toLocaleString()}</p>
+                    ${disc > 0 ? `<p class="text-green-600">Diskon Member ${disc}%: -Rp ${(subtotal * disc / 100).toLocaleString()}</p>` : ''}
+                    
+                    <div class="mt-3 pt-2 border-t">
+                        <label class="flex items-center gap-2 py-2">
+                            <input type="checkbox" id="queueCheckbox"> 
+                            <span>🎫 Booking Antrean Online <span class="text-red-500">(+ Rp 2.000)</span></span>
+                        </label>
+                        <label class="flex items-center gap-2 py-2">
+                            <input type="checkbox" id="deliveryCheckbox"> 
+                            <span>🚚 Pesan Antar (Delivery)</span>
+                        </label>
+                        <div id="addressInput" class="hidden mt-2">
+                            <input type="text" id="address" placeholder="Masukkan alamat lengkap" class="w-full p-2 border rounded">
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-3 mt-3">
+                        <p class="font-bold text-xl flex justify-between">
+                            <span>Total Bayar:</span>
+                            <span id="totalAmount">Rp ${afterDisc.toLocaleString()}</span>
+                        </p>
+                        <button onclick="processTransaction()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold mt-4">✅ Bayar Sekarang</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    let queueChk = document.getElementById("queueCheckbox");
+    let deliveryChk = document.getElementById("deliveryCheckbox");
+    let addressDiv = document.getElementById("addressInput");
+    
+    function updateTotal() {
+        let sub = subtotal;
+        let discAmount = sub * disc / 100;
+        let queueFee = queueChk.checked ? 2000 : 0;
+        let total = sub - discAmount + queueFee;
+        document.getElementById("totalAmount").innerHTML = "Rp " + total.toLocaleString();
+    }
+    
+    queueChk.onchange = updateTotal;
+    deliveryChk.onchange = function() {
+        addressDiv.classList.toggle("hidden", !this.checked);
+        updateTotal();
+    };
+    updateTotal();
+}
+
+window.processTransaction = function() {
+    let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+    let disc = currentUser.discount || 0;
+    let afterDisc = subtotal - (subtotal * disc / 100);
+    let queueFee = document.getElementById("queueCheckbox")?.checked ? 2000 : 0;
+    let isDelivery = document.getElementById("deliveryCheckbox")?.checked || false;
+    let address = document.getElementById("address")?.value || "";
+    
+    if (isDelivery && !address) {
+        alert("Masukkan alamat untuk pesan antar!");
+        return;
+    }
+    
+    let total = afterDisc + queueFee;
+    let trxId = "TRX" + Date.now();
+    
+    let transaction = {
+        id: trxId,
+        user: currentUser.name,
+        items: [...cart],
+        subtotal: subtotal,
+        discount: subtotal * disc / 100,
+        queueFee: queueFee,
+        total: total,
+        delivery: isDelivery,
+        address: address,
+        date: new Date().toISOString()
+    };
+    
+    transactions.push(transaction);
+    
+    // Kurangi stok
+    cart.forEach(item => {
+        let p = products.find(prod => prod.id === item.id);
+        if (p) p.stock -= item.qty;
+    });
+    
+    if (isDelivery) {
+        deliveries.push({
+            trxId: trxId,
+            status: "Sedang diproses",
+            address: address,
+            lastUpdate: new Date().toISOString()
+        });
+    }
+    
+    saveData();
+    alert(`✅ Transaksi berhasil!\nID: ${trxId}\nTotal: Rp ${total.toLocaleString()}\n${isDelivery ? "🚚 Pesanan akan segera diantar!" : "🏪 Silakan ambil di toko"}`);
+    
+    cart = [];
+    currentPage = "home";
+    render();
+};
+
+// ========== TRACKING PAGE ==========
+function renderTracking(container) {
+    let myDeliveries = deliveries.filter(d => {
+        let trx = transactions.find(t => t.id === d.trxId);
+        return trx && trx.user === currentUser.name;
+    });
+    
+    container.innerHTML = `
+        <div class="container mx-auto px-4 py-8 max-w-2xl">
+            <button onclick="goBackHome()" class="text-blue-600 mb-4">← Kembali</button>
+            <h2 class="text-2xl font-bold mb-4">🚚 Lacak Pengiriman</h2>
+            
+            ${myDeliveries.length === 0 ? 
+                '<div class="bg-white p-8 text-center rounded-xl">Belum ada pesanan antar</div>' :
+                myDeliveries.map(d => `
+                    <div class="bg-white rounded-xl shadow p-4 mb-4">
+                        <p class="font-bold">ID: ${d.trxId}</p>
+                        <p>Alamat: ${d.address}</p>
+                        <p>Status: <span class="font-semibold text-blue-600">${d.status}</span></p>
+                        <p>Update: ${new Date(d.lastUpdate).toLocaleString()}</p>
+                        ${currentUser.role === 'admin' ? `<button onclick="updateDelivery('${d.trxId}')" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded">Update Status</button>` : ''}
+                    </div>
+                `).join('')
+            }
+        </div>
+    `;
+}
+
+window.updateDelivery = function(trxId) {
+    let del = deliveries.find(d => d.trxId === trxId);
+    if (del) {
+        let statuses = ["Sedang diproses", "Sedang dikemas", "Sedang diantar", "Telah sampai tujuan"];
+        let idx = statuses.indexOf(del.status);
+        del.status = statuses[(idx + 1) % statuses.length];
+        del.lastUpdate = new Date().toISOString();
+        saveData();
+        render();
+    }
+};
+
+// ========== PROFILE PAGE ==========
+function renderProfile(container) {
+    let userTrx = transactions.filter(t => t.user === currentUser.name);
+    
+    container.innerHTML = `
+        <div class="container mx-auto px-4 py-8 max-w-2xl">
+            <button onclick="goBackHome()" class="text-blue-600 mb-4">← Kembali</button>
+            <div class="bg-white rounded-xl shadow p-6">
+                <h2 class="text-2xl font-bold mb-4">👤 Profil Saya</h2>
+                <p><strong>Nama:</strong> ${currentUser.name}</p>
+                <p><strong>Email:</strong> ${currentUser.email}</p>
+                <p><strong>Role:</strong> ${currentUser.role === 'admin' ? 'Administrator' : 'Member'}</p>
+                <p><strong>Status:</strong> ${currentUser.discount > 0 ? '🏅 Member Ustadz (Diskon 20%)' : 'Member Biasa'}</p>
+                <p><strong>Total Transaksi:</strong> ${userTrx.length} kali</p>
+            </div>
+        </div>
+    `;
+}
+
+// ========== ADMIN PAGE ==========
+function renderAdmin(container) {
+    container.innerHTML = `
+        <div class="container mx-auto px-4 py-8">
+            <button onclick="goBackHome()" class="text-blue-600 mb-4">← Kembali</button>
+            <h2 class="text-2xl font-bold mb-4">⚙️ Admin CMS</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow p-4">
+                    <h3 class="font-bold text-lg mb-3">📦 Kelola Produk</h3>
+                    <div id="adminProducts"></div>
+                    <button onclick="addNewProduct()" class="mt-3 w-full bg-green-600 text-white py-2 rounded">+ Tambah Produk</button>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow p-4">
+                    <h3 class="font-bold text-lg mb-3">📋 Semua Transaksi</h3>
+                    <div id="adminTransactions" class="max-h-96 overflow-y-auto"></div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow p-4 mt-6">
+                <h3 class="font-bold text-lg mb-3">🚚 Kelola Pengiriman</h3>
+                <div id="adminDeliveries"></div>
+            </div>
+        </div>
+    `;
+    
+    let prodDiv = document.getElementById("adminProducts");
+    prodDiv.innerHTML = products.map(p => `
+        <div class="flex justify-between border-b py-2">
+            <span>${p.name} - Rp${p.price} (stok:${p.stock})</span>
+            <button onclick="deleteProd(${p.id})" class="text-red-500">Hapus</button>
+        </div>
+    `).join("");
+    
+    let transDiv = document.getElementById("adminTransactions");
+    transDiv.innerHTML = transactions.map(t => `
+        <div class="border-b py-2 text-sm">
+            <p class="font-bold">${t.id}</p>
+            <p>${t.user} - Rp${t.total.toLocaleString()}</p>
+            <p class="text-xs">${new Date(t.date).toLocaleString()}</p>
+        </div>
+    `).join("");
+    
+    let delDiv = document.getElementById("adminDeliveries");
+    delDiv.innerHTML = deliveries.map(d => `
+        <div class="border-b py-2">
+            <p>ID: ${d.trxId} - Status: ${d.status}</p>
+            <button onclick="updateDelivery('${d.trxId}')" class="bg-blue-500 text-white px-2 py-1 rounded text-sm">Update</button>
+        </div>
+    `).join("");
+}
+
+window.addNewProduct = function() {
+    let name = prompt("Nama produk:");
+    if (!name) return;
+    let price = parseInt(prompt("Harga:"));
+    let stock = parseInt(prompt("Stok:"));
+    products.push({ id: Date.now(), name: name, price: price, stock: stock });
+    saveData();
+    render();
+};
+
+window.deleteProd = function(id) {
+    if (confirm("Hapus produk?")) {
+        products = products.filter(p => p.id !== id);
+        saveData();
+        render();
+    }
+};
+
+// ========== NAVIGASI ==========
+window.goBackHome = function() {
+    currentPage = "home";
+    render();
+};
+
+window.goToTracking = function() {
+    currentPage = "tracking";
+    render();
+};
+
+window.goToProfile = function() {
+    currentPage = "profile";
+    render();
+};
+
+window.goToAdmin = function() {
+    currentPage = "admin";
+    render();
+};
+
+window.logout = function() {
+    currentUser = null;
+    cart = [];
+    currentPage = "landing";
+    render();
+};
+
+// Mulai
+render();
+</script>
+</body>
+</html>
