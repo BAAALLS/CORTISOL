@@ -1,1 +1,1 @@
-sdsad# CORTISOL
+cortisol adalah cortis
