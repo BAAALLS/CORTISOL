@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SekolahMart - Bisnis Sekolah & Bimbel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+    // ==================== DATA AWAL ====================
+    let users = [
+        { id: 1, name: "Ustadz Abu Bakar", email: "ustadz1@mail.com", password: "123", role: "member", membershipId: "U001", membershipName: "Ustadz Abu Bakar" },
+        { id: 2, name: "Ustadzah Fatimah", email: "ustadz2@mail.com", password: "123", role: "member", membershipId: "U002", membershipName: "Ustadzah Fatimah" },
+        { id: 3, name: "Ustadz Zaki", email: "ustadz3@mail.com", password: "123", role: "member", membershipId: "U003", membershipName: "Ustadz Zaki" },
+        { id: 4, name: "Ustadz Rahman", email: "ustadz4@mail.com", password: "123", role: "member", membershipId: "U004", membershipName: "Ustadz Rahman" },
+        { id: 5, name: "Ustadz Hafidz", email: "ustadz5@mail.com", password: "123", role: "member", membershipId: "U005", membershipName: "Ustadz Hafidz" },
+        { id: 99, name: "Admin Sekolah", email: "admin@sekolah.com", password: "admin123", role: "admin" }
+    ];
+    
+    let products = [
+        { id: 1, name: "Buku Tulis 50 lembar", price: 5000, stock: 100, image: "📘" },
+        { id: 2, name: "Pensil 2B (1 pack)", price: 12000, stock: 50, image: "✏️" },
+        { id: 3, name: "Ransel Sekolah", price: 85000, stock: 20, image: "🎒" },
+        { id: 4, name: "Bimbel Matematika (1 sesi)", price: 35000, stock: 999, image: "🧮" },
+        { id: 5, name: "Seragam Olahraga", price: 120000, stock: 15, image: "👕" }
+    ];
+    
+    let transactions = [];
+    let deliveries = [];
+    let cart = [];
+    let currentUser = null;
+    
+    // Load data dari localStorage
+    function loadData() {
+        let storedUsers = localStorage.getItem('users');
+        let storedProducts = localStorage.getItem('products');
+        let storedTransactions = localStorage.getItem('transactions');
+        let storedDeliveries = localStorage.getItem('deliveries');
+        
+        if (storedUsers) users = JSON.parse(storedUsers);
+        else localStorage.setItem('users', JSON.stringify(users));
+        
+        if (storedProducts) products = JSON.parse(storedProducts);
+        else localStorage.setItem('products', JSON.stringify(products));
+        
+        if (storedTransactions) transactions = JSON.parse(storedTransactions);
+        else localStorage.setItem('transactions', JSON.stringify(transactions));
+        
+        if (storedDeliveries) deliveries = JSON.parse(storedDeliveries);
+        else localStorage.setItem('deliveries', JSON.stringify(deliveries));
+    }
+    
+    function saveAll() {
+        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem('products', JSON.stringify(products));
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        localStorage.setItem('deliveries', JSON.stringify(deliveries));
+    }
+    
+    loadData();
+    
+    // ==================== FUNGSI GLOBAL ====================
+    function navigate(page) {
+        currentPage = page;
+        renderApp();
+    }
+    
+    function logout() {
+        currentUser = null;
+        cart = [];
+        navigate('landing');
+    }
+    
+    function isAdmin() {
+        return currentUser && currentUser.role === 'admin';
+    }
+    
+    function getUserMembership(email) {
+        let user = users.find(u => u.email === email && u.role === 'member' && u.membershipId);
+        return user ? { isMember: true, name: user.membershipName, discount: 0.2 } : { isMember: false, discount: 0 };
+    }
+    
+    function generateId() {
+        return 'TRX' + Date.now() + Math.floor(Math.random() * 1000);
+    }
+    
+    // ==================== LOGIN REGISTER ====================
+    window.handleLogin = function() {
+        let email = document.getElementById('loginEmail')?.value;
+        let password = document.getElementById('loginPassword')?.value;
+        
+        if (!email || !password) {
+            alert("Masukkan email dan password!");
+            return;
+        }
+        
+        let user = users.find(u => u.email === email && u.password === password);
+        
+        if (user) {
+            currentUser = user;
+            cart = [];
+            navigate('utama');
+        } else {
+            alert("Login gagal! Cek email/password.\n\nAkun demo:\nustadz1@mail.com / 123\nadmin@sekolah.com / admin123");
+        }
+    };
+    
+    window.handleRegister = function() {
+        let name = document.getElementById('regName')?.value;
+        let email = document.getElementById('regEmail')?.value;
+        let password = document.getElementById('regPassword')?.value;
+        
+        if (!name || !email || !password) {
+            alert("Isi semua field!");
+            return;
+        }
+        
+        if (users.find(u => u.email === email)) {
+            alert("Email sudah terdaftar!");
+            return;
+        }
+        
+        let newUser = {
+            id: Date.now(),
+            name: name,
+            email: email,
+            password: password,
+            role: "member",
+            membershipId: null,
+            membershipName: null
+        };
+        
+        users.push(newUser);
+        saveAll();
+        alert("Registrasi berhasil! Silakan login.");
+        showLoginForm();
+    };
+    
+    window.showLoginForm = function() {
+        let container = document.getElementById('authFormContainer');
+        if (container) {
+            container.innerHTML = `
+                <h3 class="font-bold text-lg mb-3">Login</h3>
+                <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 border rounded-lg mb-3">
+                <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 border rounded-lg mb-4">
+                <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">Login</button>
+                <p class="text-center text-sm text-gray-500 mt-3">Belum punya akun? <button onclick="showRegisterForm()" class="text-blue-600">Daftar</button></p>
+            `;
+        }
+    };
+    
+    window.showRegisterForm = function() {
+        let container = document.getElementById('authFormContainer');
+        if (container) {
+            container.innerHTML = `
+                <h3 class="font-bold text-lg mb-3">Daftar Akun Baru</h3>
+                <input type="text" id="regName" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg mb-3">
+                <input type="email" id="regEmail" placeholder="Email" class="w-full p-3 border rounded-lg mb-3">
+                <input type="password" id="regPassword" placeholder="Password" class="w-full p-3 border rounded-lg mb-4">
+                <button onclick="handleRegister()" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold">Daftar</button>
+                <p class="text-center text-sm text-gray-500 mt-3">Sudah punya akun? <button onclick="showLoginForm()" class="text-blue-600">Login</button></p>
+            `;
+        }
+    };
+    
+    // ==================== FUNGSI KERANJANG ====================
+    window.addToCart = function(productId) {
+        let product = products.find(p => p.id === productId);
+        if (!product) return;
+        if (product.stock <= 0) {
+            alert("Stok habis!");
+            return;
+        }
+        
+        let existing = cart.find(c => c.id === productId);
+        if (existing) {
+            existing.qty++;
+        } else {
+            cart.push({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                qty: 1
+            });
+        }
+        renderCartDisplay();
+        alert(`${product.name} ditambahkan ke keranjang!`);
+    };
+    
+    window.removeFromCart = function(productId) {
+        cart = cart.filter(c => c.id !== productId);
+        renderCartDisplay();
+        renderHomeContent();
+    };
+    
+    window.updateCartQty = function(productId, newQty) {
+        let item = cart.find(c => c.id === productId);
+        if (item) {
+            if (newQty <= 0) {
+                cart = cart.filter(c => c.id !== productId);
+            } else {
+                item.qty = newQty;
+            }
+            renderCartDisplay();
+            renderHomeContent();
+        }
+    };
+    
+    function renderCartDisplay() {
+        let cartDiv = document.getElementById('cartItemsList');
+        let cartCount = document.getElementById('cartCount');
+        
+        if (cartCount) {
+            let totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+            cartCount.innerText = totalQty;
+        }
+        
+        if (cartDiv) {
+            if (cart.length === 0) {
+                cartDiv.innerHTML = '<p class="text-gray-400 text-center py-4">Keranjang kosong</p>';
+            } else {
+                cartDiv.innerHTML = cart.map(item => `
+                    <div class="flex justify-between items-center border-b py-2">
+                        <div class="flex-1">
+                            <p class="font-medium">${item.name}</p>
+                            <p class="text-sm text-gray-500">Rp ${item.price.toLocaleString()}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateCartQty(${item.id}, ${item.qty - 1})" class="w-7 h-7 bg-gray-200 rounded-full">-</button>
+                            <span class="w-8 text-center">${item.qty}</span>
+                            <button onclick="updateCartQty(${item.id}, ${item.qty + 1})" class="w-7 h-7 bg-gray-200 rounded-full">+</button>
+                            <button onclick="removeFromCart(${item.id})" class="text-red-500 ml-2"><i class="ri-delete-bin-line"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    }
+    
+    // ==================== TRANSAKSI ====================
+    window.proceedToTransaction = function() {
+        if (cart.length === 0) {
+            alert("Keranjang kosong!");
+            return;
+        }
+        navigate('transaksi');
+    };
+    
+    window.processTransaction = function() {
+        if (cart.length === 0) {
+            alert("Keranjang kosong!");
+            return;
+        }
+        
+        let queueBooking = document.getElementById('queueBooking')?.checked || false;
+        let useDelivery = document.getElementById('useDelivery')?.checked || false;
+        let deliveryAddress = document.getElementById('deliveryAddress')?.value || "";
+        
+        if (useDelivery && !deliveryAddress) {
+            alert("Masukkan alamat untuk pesan antar!");
+            return;
+        }
+        
+        let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        let membership = getUserMembership(currentUser.email);
+        let discount = membership.isMember ? subtotal * 0.2 : 0;
+        let jamFee = queueBooking ? 2000 : 0;
+        let total = subtotal - discount + jamFee;
+        
+        let transactionId = generateId();
+        
+        let newTransaction = {
+            id: transactionId,
+            userId: currentUser.id,
+            userName: currentUser.name,
+            items: [...cart],
+            subtotal: subtotal,
+            discount: discount,
+            jamFee: jamFee,
+            total: total,
+            queueBooking: queueBooking,
+            delivery: useDelivery,
+            address: deliveryAddress,
+            status: "PAID",
+            createdAt: new Date().toISOString()
+        };
+        
+        transactions.push(newTransaction);
+        
+        // Kurangi stok
+        cart.forEach(item => {
+            let product = products.find(p => p.id === item.id);
+            if (product) {
+                product.stock -= item.qty;
+            }
+        });
+        
+        // Buat delivery jika pesan antar
+        if (useDelivery) {
+            deliveries.push({
+                trxId: transactionId,
+                status: "Sedang diproses",
+                location: "Toko",
+                lastUpdate: new Date().toISOString(),
+                address: deliveryAddress
+            });
+        }
+        
+        saveAll();
+        
+        alert(`Transaksi berhasil!\nID: ${transactionId}\nTotal: Rp ${total.toLocaleString()}\n${useDelivery ? "Pesanan akan diantar. Cek menu Tracking!" : "Silakan ambil pesanan di toko."}`);
+        
+        cart = [];
+        navigate('tracking');
+    };
+    
+    // ==================== ADMIN FUNGSI ====================
+    window.addProduct = function() {
+        let name = prompt("Nama produk:");
+        if (!name) return;
+        let price = parseInt(prompt("Harga:"));
+        if (isNaN(price)) return;
+        let stock = parseInt(prompt("Stok:"));
+        if (isNaN(stock)) return;
+        
+        products.push({
+            id: Date.now(),
+            name: name,
+            price: price,
+            stock: stock,
+            image: "📦"
+        });
+        saveAll();
+        renderAdminContent();
+        renderHomeContent();
+        alert("Produk berhasil ditambahkan!");
+    };
+    
+    window.deleteProduct = function(id) {
+        if (confirm("Hapus produk ini?")) {
+            products = products.filter(p => p.id !== id);
+            saveAll();
+            renderAdminContent();
+            renderHomeContent();
+        }
+    };
+    
+    window.updateDeliveryStatus = function(trxId) {
+        let delivery = deliveries.find(d => d.trxId === trxId);
+        if (!delivery) return;
+        
+        let statuses = ["Sedang diproses", "Sedang dikemas", "Sedang diantar", "Telah sampai tujuan"];
+        let currentIndex = statuses.indexOf(delivery.status);
+        let nextIndex = (currentIndex + 1) % statuses.length;
+        delivery.status = statuses[nextIndex];
+        delivery.location = delivery.status === "Sedang diantar" ? "Dalam perjalanan" : (delivery.status === "Telah sampai tujuan" ? "Tujuan" : "Toko");
+        delivery.lastUpdate = new Date().toISOString();
+        saveAll();
+        
+        if (currentPage === 'tracking') renderTrackingContent();
+        if (isAdmin() && currentPage === 'admin') renderAdminContent();
+    };
+    
+    // ==================== RENDER HALAMAN ====================
+    let currentPage = 'landing';
+    
+    function renderApp() {
+        const app = document.getElementById('app');
+        if (!app) return;
+        
+        if (!currentUser) {
+            if (currentPage === 'landing') renderLandingPage(app);
+            else if (currentPage === 'auth') renderAuthPage(app);
+            else renderLandingPage(app);
+        } else {
+            if (currentPage === 'utama') renderHomePage(app);
+            else if (currentPage === 'transaksi') renderTransactionPage(app);
+            else if (currentPage === 'profile') renderProfilePage(app);
+            else if (currentPage === 'tracking') renderTrackingPage(app);
+            else if (currentPage === 'admin' && isAdmin()) renderAdminPage(app);
+            else renderHomePage(app);
+        }
+    }
+    
+    function renderLandingPage(container) {
+        container.innerHTML = `
+            <div class="min-h-screen bg-gradient-to-r from-blue-600 to-indigo-700">
+                <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-white"><i class="ri-book-open-line"></i> SekolahMart</h1>
+                    <button onclick="navigate('auth')" class="bg-white text-blue-600 px-5 py-2 rounded-full font-semibold hover:bg-gray-100">Masuk / Daftar</button>
+                </nav>
+                <div class="container mx-auto px-6 py-20 text-center text-white">
+                    <h2 class="text-5xl font-extrabold mb-4">Solusi Perlengkapan & Bimbel Sekolah</h2>
+                    <p class="text-xl mb-8">Belanja alat sekolah, antar ke rumah, atau booking antrean bimbel tanpa ribet!</p>
+                    <button onclick="navigate('auth')" class="bg-yellow-400 text-blue-900 px-8 py-3 rounded-full font-bold text-lg shadow-lg">Mulai Belanja</button>
+                </div>
+                <div class="container mx-auto px-6 py-16 grid md:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow text-center"><i class="ri-store-3-line text-4xl text-blue-600"></i><h3 class="font-bold text-xl mt-2">+100 Produk</h3><p>Alat tulis, seragam, bimbel</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow text-center"><i class="ri-truck-line text-4xl text-blue-600"></i><h3 class="font-bold text-xl mt-2">Pesan Antar</h3><p>Lacak pesanan realtime</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow text-center"><i class="ri-vip-crown-line text-4xl text-blue-600"></i><h3 class="font-bold text-xl mt-2">Membership Ustadz</h3><p>Diskon 20% untuk 5 ustadz terdaftar</p></div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderAuthPage(container) {
+        container.innerHTML = `
+            <div class="min-h-screen flex items-center justify-center bg-gray-100">
+                <div class="bg-white p-8 rounded-2xl shadow-xl w-96">
+                    <div class="text-center mb-6">
+                        <h1 class="text-2xl font-bold text-blue-600">SekolahMart</h1>
+                        <p class="text-gray-500">Akses akun Anda</p>
+                    </div>
+                    <div id="authFormContainer"></div>
+                    <div class="mt-6 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
+                        <p class="font-semibold">Akun Demo:</p>
+                        <p>Member: ustadz1@mail.com / 123</p>
+                        <p>Admin: admin@sekolah.com / admin123</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        showLoginForm();
+    }
+    
+    function renderHomePage(container) {
+        let membership = getUserMembership(currentUser.email);
+        
+        container.innerHTML = `
+            <div class="bg-white shadow-sm border-b sticky top-0 z-10">
+                <div class="container mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
+                    <h1 class="text-xl font-bold text-blue-700">SekolahMart</h1>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="text-sm">Halo, ${currentUser.name}</span>
+                        ${membership.isMember ? `<span class="bg-green-200 text-green-800 px-2 py-1 rounded-full text-xs">🏅 Member ${membership.name}</span>` : ''}
+                        <button onclick="navigate('transaksi')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-1"><i class="ri-shopping-cart-line"></i> Transaksi <span id="cartCount" class="bg-red-500 text-white rounded-full px-1 text-xs ml-1">0</span></button>
+                        <button onclick="navigate('tracking')" class="bg-gray-500 text-white px-3 py-1 rounded-lg text-sm"><i class="ri-map-pin-line"></i> Tracking</button>
+                        <button onclick="navigate('profile')" class="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm"><i class="ri-user-line"></i> Profil</button>
+                        ${isAdmin() ? '<button onclick="navigate(\'admin\')" class="bg-red-600 text-white px-3 py-1 rounded-lg text-sm">CMS</button>' : ''}
+                        <button onclick="logout()" class="bg-gray-300 px-3 py-1 rounded-lg text-sm">Logout</button>
+                    </div>
+                </div>
+            </div>
+            <div class="container mx-auto px-4 py-8">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="md:col-span-2">
+                        <h2 class="text-2xl font-bold mb-4">📦 Produk Kami</h2>
+                        <div class="grid sm:grid-cols-2 gap-4" id="homeProductList"></div>
+                    </div>
+                    <div>
+                        <div class="bg-white rounded-xl shadow p-4 sticky top-20">
+                            <h3 class="font-bold text-lg mb-3">🛒 Keranjang Belanja</h3>
+                            <div id="cartItemsList" class="max-h-96 overflow-y-auto"></div>
+                            ${cart.length > 0 ? `<button onclick="proceedToTransaction()" class="mt-4 w-full bg-green-600 text-white py-2 rounded-lg font-semibold">Lanjut ke Transaksi</button>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        renderHomeContent();
+        renderCartDisplay();
+    }
+    
+    function renderHomeContent() {
+        let productDiv = document.getElementById('homeProductList');
+        if (!productDiv) return;
+        
+        productDiv.innerHTML = products.map(p => `
+            <div class="bg-white rounded-xl shadow p-4 hover:shadow-lg transition">
+                <div class="text-5xl mb-2">${p.image}</div>
+                <h3 class="font-bold">${p.name}</h3>
+                <p class="text-blue-600 font-bold">Rp ${p.price.toLocaleString()}</p>
+                <p class="text-sm text-gray-500">Stok: ${p.stock}</p>
+                <button onclick="addToCart(${p.id})" class="mt-2 w-full bg-indigo-500 text-white py-1 rounded ${p.stock <= 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${p.stock <= 0 ? 'disabled' : ''}>Tambah ke Keranjang</button>
+            </div>
+        `).join('');
+    }
+    
+    function renderTransactionPage(container) {
+        let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        let membership = getUserMembership(currentUser.email);
+        let discount = membership.isMember ? subtotal * 0.2 : 0;
+        
+        container.innerHTML = `
+            <div class="min-h-screen bg-gray-100 py-8">
+                <div class="container mx-auto px-4 max-w-2xl">
+                    <button onclick="navigate('utama')" class="text-blue-600 mb-4 flex items-center gap-1"><i class="ri-arrow-left-line"></i> Kembali</button>
+                    <div class="bg-white rounded-2xl shadow-xl p-6">
+                        <h2 class="text-2xl font-bold mb-4">🧾 Detail Transaksi</h2>
+                        <div class="border-b pb-3 mb-3">
+                            ${cart.map(item => `<div class="flex justify-between py-1"><span>${item.name} x${item.qty}</span><span>Rp ${(item.price * item.qty).toLocaleString()}</span></div>`).join('')}
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <p class="flex justify-between"><span>Subtotal</span><span>Rp ${subtotal.toLocaleString()}</span></p>
+                            ${membership.isMember ? `<p class="flex justify-between text-green-600"><span>Diskon Member (20%)</span><span>-Rp ${discount.toLocaleString()}</span></p>` : ''}
+                            <div class="border-t pt-2 mt-2">
+                                <label class="flex items-center justify-between py-2 cursor-pointer">
+                                    <span>🎫 Booking Antrean Online <span class="text-xs text-gray-500">(biaya jam padat)</span></span>
+                                    <input type="checkbox" id="queueBooking" class="w-5 h-5">
+                                </label>
+                                <label class="flex items-center justify-between py-2 cursor-pointer">
+                                    <span>🚚 Pesan Antar (Delivery)</span>
+                                    <input type="checkbox" id="useDelivery" class="w-5 h-5">
+                                </label>
+                                <div id="addressField" class="hidden mt-2">
+                                    <input type="text" id="deliveryAddress" placeholder="Masukkan alamat lengkap" class="w-full p-2 border rounded">
+                                </div>
+                            </div>
+                            <div class="border-t pt-3 mt-3">
+                                <p class="flex justify-between font-bold text-lg"><span>Total</span><span id="totalPreview">Rp ${(subtotal - discount).toLocaleString()}</span></p>
+                            </div>
+                        </div>
+                        <button onclick="processTransaction()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Bayar Sekarang</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        let queueChk = document.getElementById('queueBooking');
+        let deliveryChk = document.getElementById('useDelivery');
+        let addressDiv = document.getElementById('addressField');
+        let totalSpan = document.getElementById('totalPreview');
+        
+        function updateTotal() {
+            let sub = subtotal;
+            let disc = membership.isMember ? sub * 0.2 : 0;
+            let jam = queueChk.checked ? 2000 : 0;
+            let total = sub - disc + jam;
+            totalSpan.innerText = 'Rp ' + total.toLocaleString();
+        }
+        
+        queueChk.onchange = updateTotal;
+        deliveryChk.onchange = function() {
+            addressDiv.classList.toggle('hidden', !this.checked);
+            updateTotal();
+        };
+        updateTotal();
+    }
+    
+    function renderTrackingPage(container) {
+        let userDeliveries = deliveries.filter(d => {
+            let trx = transactions.find(t => t.id === d.trxId);
+            return trx && trx.userId === currentUser.id;
+        });
+        
+        container.innerHTML = `
+            <div class="min-h-screen bg-gray-100 py-8">
+                <div class="container mx-auto px-4 max-w-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <button onclick="navigate('utama')" class="text-blue-600 flex items-center gap-1"><i class="ri-arrow-left-line"></i> Kembali</button>
+                        <h2 class="text-2xl font-bold">🚚 Lacak Pengiriman</h2>
+                    </div>
+                    ${userDeliveries.length === 0 ? 
+                        '<div class="bg-white p-8 text-center rounded-xl">Belum ada pesanan dengan layanan antar.</div>' : 
+                        userDeliveries.map(d => {
+                            let trx = transactions.find(t => t.id === d.trxId);
+                            return `
+                                <div class="bg-white p-5 rounded-xl shadow mb-4">
+                                    <p class="font-bold text-lg">ID: ${d.trxId}</p>
+                                    <p class="text-gray-600">Alamat: ${d.address}</p>
+                                    <div class="mt-3 p-3 bg-gray-50 rounded">
+                                        <p class="font-semibold">Status: ${d.status}</p>
+                                        <p>Lokasi: ${d.location}</p>
+                                        <p class="text-xs text-gray-400">Update: ${new Date(d.lastUpdate).toLocaleString()}</p>
+                                    </div>
+                                    <p class="text-sm mt-2">Total: Rp ${trx?.total.toLocaleString()}</p>
+                                </div>
+                            `;
+                        }).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderProfilePage(container) {
+        let membership = getUserMembership(currentUser.email);
+        let userTransactions = transactions.filter(t => t.userId === currentUser.id);
+        
+        container.innerHTML = `
+            <div class="min-h-screen bg-gray-100 py-8">
+                <div class="container mx-auto px-4 max-w-2xl">
+                    <button onclick="navigate('utama')" class="text-blue-600 mb-4 flex items-center gap-1"><i class="ri-arrow-left-line"></i> Kembali</button>
+                    <div class="bg-white rounded-2xl shadow p-6">
+                        <div class="text-center mb-4">
+                            <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto text-3xl">👤</div>
+                            <h2 class="text-xl font-bold mt-2">${currentUser.name}</h2>
+                            <p class="text-gray-500">${currentUser.email}</p>
+                        </div>
+                        <div class="border-t pt-4">
+                            <p><strong>Role:</strong> ${currentUser.role === 'admin' ? 'Administrator' : 'Member'}</p>
+                            <p><strong>Membership:</strong> ${membership.isMember ? `✅ Aktif (${membership.name} - diskon 20%)` : '❌ Tidak memiliki membership'}</p>
+                            <p><strong>Total Transaksi:</strong> ${userTransactions.length} kali</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderAdminPage(container) {
+        container.innerHTML = `
+            <div class="min-h-screen bg-gray-100 py-8">
+                <div class="container mx-auto px-4">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">🔧 Admin CMS</h2>
+                        <button onclick="navigate('utama')" class="bg-gray-500 text-white px-4 py-2 rounded">Kembali</button>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6" id="adminContent"></div>
+                </div>
+            </div>
+        `;
+        renderAdminContent();
+    }
+    
+    function renderAdminContent() {
+        let container = document.getElementById('adminContent');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="bg-white p-4 rounded-xl shadow">
+                <h3 class="font-bold text-xl mb-3">📦 Kelola Produk</h3>
+                <div id="adminProductList" class="max-h-96 overflow-y-auto"></div>
+                <button onclick="addProduct()" class="mt-3 w-full bg-green-600 text-white py-2 rounded">+ Tambah Produk</button>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow">
+                <h3 class="font-bold text-xl mb-3">📋 Semua Transaksi</h3>
+                <div id="adminTransactionList" class="max-h-96 overflow-y-auto text-sm"></div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow md:col-span-2">
+                <h3 class="font-bold text-xl mb-3">🚚 Kelola Pengiriman</h3>
+                <div id="adminDeliveryList" class="space-y-2"></div>
+            </div>
+        `;
+        
+        let productList = document.getElementById('adminProductList');
+        productList.innerHTML = products.map(p => `
+            <div class="flex justify-between items-center border-b py-2">
+                <span><span class="text-xl">${p.image}</span> ${p.name} - Rp${p.price.toLocaleString()} (stok:${p.stock})</span>
+                <button onclick="deleteProduct(${p.id})" class="text-red-500"><i class="ri-delete-bin-line"></i></button>
+            </div>
+        `).join('');
+        
+        let transList = document.getElementById('adminTransactionList');
+        transList.innerHTML = transactions.map(t => `
+            <div class="border-b py-2">
+                <p class="font-semibold">${t.id}</p>
+                <p class="text-xs">${t.userName} - ${new Date(t.createdAt).toLocaleString()}</p>
+                <p class="text-sm">Total: Rp ${t.total.toLocaleString()} ${t.delivery ? '🚚' : '🏪'} ${t.queueBooking ? '🎫' : ''}</p>
+            </div>
+        `).join('');
+        
+        let deliveryList = document.getElementById('adminDeliveryList');
+        if (deliveries.length === 0) {
+            deliveryList.innerHTML = '<p class="text-gray-400">Belum ada pengiriman</p>';
+        } else {
+            deliveryList.innerHTML = deliveries.map(d => {
+                let trx = transactions.find(t => t.id === d.trxId);
+                return `
+                    <div class="border p-3 rounded">
+                        <p><strong>ID Transaksi:</strong> ${d.trxId}</p>
+                        <p><strong>Alamat:</strong> ${d.address}</p>
+                        <p><strong>Status:</strong> ${d.status}</p>
+                        <button onclick="updateDeliveryStatus('${d.trxId}')" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded text-sm">Update Status</button>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+    
+    // Mulai aplikasi
+    renderApp();
+</script>
+</body>
+</html>

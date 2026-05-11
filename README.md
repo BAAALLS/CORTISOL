@@ -1,1 +1,1 @@
-cortisol adalah cortis
+cortisol adalah cor
