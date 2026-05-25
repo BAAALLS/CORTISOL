@@ -3,31 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SekolahMart - Admin Panel & Toko</title>
+    <title>SekolahMart - Admin Panel & Toko Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2); }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body class="bg-gray-100">
 
 <div id="app"></div>
 
 <script>
-// ========== DATA STORAGE ==========
+// ========== DATABASE ==========
 let users = [
-    { id: 1, name: "Ustadz Abu Bakar", email: "ustadz1@mail.com", password: "123", role: "member", discount: 20, avatar: "👨‍🏫" },
-    { id: 2, name: "Ustadzah Fatimah", email: "ustadz2@mail.com", password: "123", role: "member", discount: 20, avatar: "👩‍🏫" },
-    { id: 3, name: "Ustadz Zaki", email: "ustadz3@mail.com", password: "123", role: "member", discount: 20, avatar: "👨‍🏫" },
-    { id: 4, name: "Ustadz Rahman", email: "ustadz4@mail.com", password: "123", role: "member", discount: 20, avatar: "👨‍🏫" },
-    { id: 5, name: "Ustadz Hafidz", email: "ustadz5@mail.com", password: "123", role: "member", discount: 20, avatar: "👨‍🏫" },
-    { id: 99, name: "Admin Sekolah", email: "admin@sekolah.com", password: "admin123", role: "admin", discount: 0, avatar: "👑" }
+    { id: 1, name: "Ustadz Abu Bakar", email: "ustadz1@mail.com", password: "123", role: "member", discount: 20, avatar: "👨‍🏫", phone: "08123456789", joinDate: "2024-01-15" },
+    { id: 2, name: "Ustadzah Fatimah", email: "ustadz2@mail.com", password: "123", role: "member", discount: 20, avatar: "👩‍🏫", phone: "08123456788", joinDate: "2024-02-10" },
+    { id: 3, name: "Ustadz Zaki", email: "ustadz3@mail.com", password: "123", role: "member", discount: 20, avatar: "👨‍🏫", phone: "08123456787", joinDate: "2024-03-05" },
+    { id: 4, name: "Ustadz Rahman", email: "ustadz4@mail.com", password: "123", role: "member", discount: 20, avatar: "👨‍🏫", phone: "08123456786", joinDate: "2024-04-20" },
+    { id: 5, name: "Ustadz Hafidz", email: "ustadz5@mail.com", password: "123", role: "member", discount: 20, avatar: "👨‍🏫", phone: "08123456785", joinDate: "2024-05-12" },
+    { id: 99, name: "Admin Super", email: "admin@sekolah.com", password: "admin123", role: "admin", discount: 0, avatar: "👑", phone: "08123456000", joinDate: "2024-01-01" }
 ];
 
 let products = [
-    { id: 1, name: "Buku Tulis 50 lembar", price: 5000, stock: 100, category: "Alat Tulis", image: "📘" },
-    { id: 2, name: "Pensil 2B (1 pack)", price: 12000, stock: 50, category: "Alat Tulis", image: "✏️" },
-    { id: 3, name: "Ransel Sekolah", price: 85000, stock: 20, category: "Perlengkapan", image: "🎒" },
-    { id: 4, name: "Bimbel Matematika", price: 35000, stock: 999, category: "Jasa", image: "🧮" },
-    { id: 5, name: "Seragam Olahraga", price: 120000, stock: 15, category: "Pakaian", image: "👕" }
+    { id: 1, name: "Buku Tulis Sinar Dunia 50 Lembar", price: 5000, stock: 150, category: "Alat Tulis", image: "📘", sold: 45 },
+    { id: 2, name: "Pensil 2B Faber-Castell (1 pack isi 12)", price: 18000, stock: 80, category: "Alat Tulis", image: "✏️", sold: 32 },
+    { id: 3, name: "Ransel Sekolah Anti Air 30L", price: 125000, stock: 35, category: "Perlengkapan", image: "🎒", sold: 28 },
+    { id: 4, name: "Bimbel Matematika Eksklusif (1 sesi)", price: 50000, stock: 500, category: "Jasa", image: "🧮", sold: 120 },
+    { id: 5, name: "Seragam Olahraga Premium (Set)", price: 150000, stock: 25, category: "Pakaian", image: "👕", sold: 18 },
+    { id: 6, name: "Penghapus Joyko Putih", price: 3000, stock: 200, category: "Alat Tulis", image: "🧽", sold: 67 },
+    { id: 7, name: "Bimbel Bahasa Inggris (1 sesi)", price: 55000, stock: 500, category: "Jasa", image: "🇬🇧", sold: 95 },
+    { id: 8, name: "Topi Sekolah Eiger", price: 45000, stock: 40, category: "Pakaian", image: "🧢", sold: 22 }
 ];
 
 let transactions = [];
@@ -35,8 +46,9 @@ let deliveries = [];
 let cart = [];
 let currentUser = null;
 let currentPage = "landing";
+let adminTab = "products";
 
-// ========== FUNGSI STORAGE ==========
+// ========== STORAGE ==========
 function saveData() {
     localStorage.setItem("sm_users", JSON.stringify(users));
     localStorage.setItem("sm_products", JSON.stringify(products));
@@ -56,62 +68,73 @@ function loadData() {
 }
 loadData();
 
-function generateId() {
-    return "TRX" + Date.now() + Math.floor(Math.random() * 1000);
+function generateId() { return "TRX" + Date.now() + Math.floor(Math.random() * 10000); }
+
+function showNotif(msg, type = "success") {
+    let notifDiv = document.getElementById("notificationContainer");
+    if (notifDiv) {
+        notifDiv.innerHTML = `<div class="fixed top-20 right-4 z-50 bg-white shadow-lg rounded-lg p-4 fade-in border-l-4 ${type === 'success' ? 'border-green-500' : 'border-red-500'}"><p class="text-sm">${msg}</p></div>`;
+        setTimeout(() => { if(notifDiv) notifDiv.innerHTML = ""; }, 3000);
+    } else {
+        alert(msg);
+    }
 }
 
-// ========== RENDER FUNCTION ==========
+// ========== RENDER MAIN ==========
 function render() {
     let app = document.getElementById("app");
     if (!currentUser) {
-        if (currentPage === "landing") renderLanding(app);
-        else renderLanding(app);
+        renderLanding(app);
     } else {
         if (currentPage === "home") renderHome(app);
         else if (currentPage === "checkout") renderCheckout(app);
         else if (currentPage === "tracking") renderTracking(app);
         else if (currentPage === "profile") renderProfile(app);
+        else if (currentPage === "orders") renderMyOrders(app);
         else if (currentPage === "admin" && currentUser.role === "admin") renderAdmin(app);
         else renderHome(app);
     }
 }
 
-// ========== LANDING PAGE ==========
+// ========== LANDING & LOGIN ==========
 function renderLanding(container) {
     container.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-blue-700 to-indigo-900">
-            <div class="container mx-auto px-4 py-6">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <i class="ri-book-open-line text-3xl text-white"></i>
-                        <h1 class="text-2xl font-bold text-white">Sekolah<span class="text-yellow-300">Mart</span></h1>
-                    </div>
-                    <button onclick="showLoginModal()" class="bg-white text-blue-700 px-6 py-2 rounded-full font-semibold hover:bg-gray-100">Login</button>
+        <div class="min-h-screen gradient-bg">
+            <nav class="container mx-auto px-6 py-5 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i class="ri-book-open-line text-3xl text-white"></i>
+                    <h1 class="text-2xl font-bold text-white">Sekolah<span class="text-yellow-300">Mart</span></h1>
                 </div>
-                <div class="text-center text-white py-20">
-                    <div class="text-7xl mb-4">📚✏️🎒</div>
-                    <h2 class="text-5xl font-bold mb-4">Solusi Belanja Sekolah</h2>
-                    <p class="text-xl mb-8">Perlengkapan sekolah, bimbel, dan pesan antar</p>
-                    <button onclick="showLoginModal()" class="bg-yellow-400 text-blue-900 px-8 py-3 rounded-full font-bold text-lg">Mulai Belanja →</button>
-                </div>
-                <div class="grid md:grid-cols-3 gap-6 text-white max-w-4xl mx-auto">
-                    <div class="bg-white/20 p-6 rounded-2xl text-center backdrop-blur">📦 50+ Produk</div>
-                    <div class="bg-white/20 p-6 rounded-2xl text-center backdrop-blur">🚚 Pesan Antar & Tracking</div>
-                    <div class="bg-white/20 p-6 rounded-2xl text-center backdrop-blur">🏅 Diskon 20% Member Ustadz</div>
+                <button onclick="showLoginModal()" class="bg-white text-purple-700 px-6 py-2 rounded-full font-semibold hover:shadow-lg transition">Masuk / Daftar</button>
+            </nav>
+            <div class="container mx-auto px-6 py-20 text-center text-white">
+                <div class="max-w-3xl mx-auto">
+                    <div class="text-8xl mb-6">📚✏️🎒</div>
+                    <h2 class="text-5xl md:text-6xl font-extrabold mb-4">Belanja Kebutuhan<br>Sekolah Jadi Mudah</h2>
+                    <p class="text-xl mb-8 text-purple-100">+500 produk tersedia | Bimbel Online | Pesan Antar | Tracking Real-time</p>
+                    <button onclick="showLoginModal()" class="bg-yellow-400 text-purple-900 px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:scale-105 transition">🚀 Mulai Belanja</button>
                 </div>
             </div>
+            <div class="container mx-auto px-6 py-16 grid md:grid-cols-4 gap-6 text-white">
+                <div class="bg-white/20 backdrop-blur p-6 rounded-2xl text-center"><i class="ri-store-3-line text-4xl"></i><h3 class="font-bold mt-2">500+ Produk</h3></div>
+                <div class="bg-white/20 backdrop-blur p-6 rounded-2xl text-center"><i class="ri-truck-line text-4xl"></i><h3 class="font-bold mt-2">Pesan Antar</h3></div>
+                <div class="bg-white/20 backdrop-blur p-6 rounded-2xl text-center"><i class="ri-vip-crown-line text-4xl"></i><h3 class="font-bold mt-2">Diskon 20%</h3></div>
+                <div class="bg-white/20 backdrop-blur p-6 rounded-2xl text-center"><i class="ri-map-pin-line text-4xl"></i><h3 class="font-bold mt-2">Live Tracking</h3></div>
+            </div>
         </div>
-        <div id="loginModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-            <div class="bg-white rounded-2xl p-8 w-full max-w-md mx-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-blue-600">Login</h2>
-                    <button onclick="closeLoginModal()" class="text-gray-500 text-2xl">&times;</button>
+        <div id="loginModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-2xl p-8 w-full max-w-md mx-4 fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-purple-600">Selamat Datang</h2>
+                    <button onclick="closeLoginModal()" class="text-gray-400 text-3xl hover:text-gray-600">&times;</button>
                 </div>
-                <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 border rounded-lg mb-3">
-                <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 border rounded-lg mb-4">
-                <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold">Login</button>
-                <div class="mt-4 p-3 bg-gray-100 rounded-lg text-sm">
-                    <p class="font-bold">Akun Demo:</p>
+                <div class="space-y-4">
+                    <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-purple-500 outline-none">
+                    <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-purple-500 outline-none">
+                    <button onclick="doLogin()" class="w-full gradient-bg text-white py-3 rounded-xl font-bold hover:opacity-90">Login</button>
+                </div>
+                <div class="mt-6 p-4 bg-gray-50 rounded-xl text-sm">
+                    <p class="font-bold">📋 Akun Demo:</p>
                     <p>👨‍🏫 Member: ustadz1@mail.com / 123</p>
                     <p>👑 Admin: admin@sekolah.com / admin123</p>
                 </div>
@@ -120,19 +143,17 @@ function renderLanding(container) {
     `;
 }
 
-window.showLoginModal = function() {
-    document.getElementById("loginModal").classList.remove("hidden");
-    document.getElementById("loginModal").classList.add("flex");
+window.showLoginModal = () => {
+    let modal = document.getElementById("loginModal");
+    if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
 };
-
-window.closeLoginModal = function() {
-    document.getElementById("loginModal").classList.add("hidden");
-    document.getElementById("loginModal").classList.remove("flex");
+window.closeLoginModal = () => {
+    let modal = document.getElementById("loginModal");
+    if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
 };
-
-window.doLogin = function() {
-    let email = document.getElementById("loginEmail").value;
-    let pass = document.getElementById("loginPassword").value;
+window.doLogin = () => {
+    let email = document.getElementById("loginEmail")?.value;
+    let pass = document.getElementById("loginPassword")?.value;
     let user = users.find(u => u.email === email && u.password === pass);
     if (user) {
         currentUser = user;
@@ -140,184 +161,138 @@ window.doLogin = function() {
         closeLoginModal();
         currentPage = "home";
         render();
-    } else {
-        alert("Login gagal! Coba: ustadz1@mail.com / 123");
-    }
+        showNotif(`Selamat datang, ${user.name}! 🎉`, "success");
+    } else { alert("Login gagal! Cek email/password."); }
 };
 
 // ========== HOME PAGE ==========
 function renderHome(container) {
+    let filtered = products;
     let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
     let discPercent = currentUser.discount || 0;
     let discount = subtotal * discPercent / 100;
     let total = subtotal - discount;
     
     container.innerHTML = `
-        <div class="bg-white shadow-md sticky top-0 z-10">
+        <div id="notificationContainer"></div>
+        <div class="bg-white shadow-lg sticky top-0 z-20">
             <div class="container mx-auto px-4 py-3">
-                <div class="flex justify-between items-center flex-wrap gap-2">
+                <div class="flex justify-between items-center flex-wrap gap-3">
                     <div class="flex items-center gap-2">
-                        <i class="ri-book-open-line text-2xl text-blue-600"></i>
-                        <h1 class="text-xl font-bold text-blue-700">SekolahMart</h1>
+                        <i class="ri-book-open-line text-2xl text-purple-600"></i>
+                        <h1 class="text-xl font-bold text-purple-600">SekolahMart</h1>
                     </div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="bg-gray-100 px-3 py-1 rounded-full text-sm">${currentUser.avatar} ${currentUser.name}</span>
-                        ${currentUser.discount > 0 ? '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">🏅 Member 20% OFF</span>' : ''}
-                        <button onclick="goToCheckout()" class="bg-blue-500 text-white px-4 py-1 rounded-full text-sm relative">🛒 Cart (${cart.reduce((s,i)=>s+i.qty,0)})</button>
-                        <button onclick="goToTracking()" class="bg-gray-500 text-white px-4 py-1 rounded-full text-sm">🚚 Tracking</button>
-                        <button onclick="goToProfile()" class="bg-purple-500 text-white px-4 py-1 rounded-full text-sm">👤 Profil</button>
-                        ${currentUser.role === 'admin' ? '<button onclick="goToAdmin()" class="bg-red-500 text-white px-4 py-1 rounded-full text-sm">⚙️ Admin Panel</button>' : ''}
-                        <button onclick="logout()" class="bg-gray-200 px-4 py-1 rounded-full text-sm">Logout</button>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <div class="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
+                            <span class="text-xl">${currentUser.avatar}</span>
+                            <span class="text-sm font-medium">${currentUser.name}</span>
+                            ${currentUser.discount > 0 ? '<span class="bg-yellow-400 px-2 py-0.5 rounded-full text-xs font-bold">20% OFF</span>' : ''}
+                        </div>
+                        <button onclick="goToCheckout()" class="relative bg-purple-600 text-white px-4 py-2 rounded-full text-sm hover:bg-purple-700">
+                            🛒 Cart <span id="cartBadge" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">${cart.reduce((s,i)=>s+i.qty,0)}</span>
+                        </button>
+                        <button onclick="goToOrders()" class="bg-gray-100 px-4 py-2 rounded-full text-sm hover:bg-gray-200">📋 Pesanan</button>
+                        <button onclick="goToTracking()" class="bg-gray-100 px-4 py-2 rounded-full text-sm hover:bg-gray-200">🚚 Tracking</button>
+                        <button onclick="goToProfile()" class="bg-gray-100 px-4 py-2 rounded-full text-sm hover:bg-gray-200">👤 Profil</button>
+                        ${currentUser.role === 'admin' ? '<button onclick="goToAdmin()" class="bg-red-500 text-white px-4 py-2 rounded-full text-sm hover:bg-red-600">⚙️ Admin Panel</button>' : ''}
+                        <button onclick="logout()" class="bg-gray-200 px-4 py-2 rounded-full text-sm hover:bg-gray-300">Logout</button>
                     </div>
                 </div>
             </div>
         </div>
         
+        <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-2">
+            <div class="container mx-auto px-4 text-center text-sm">🏷️ Diskon 20% untuk Member Ustadz! | 🚚 Minimal belanja Rp50.000 gratis ongkir</div>
+        </div>
+        
         <div class="container mx-auto px-4 py-8">
-            <div class="grid lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2">
-                    <div class="flex gap-2 mb-4">
-                        <button onclick="filterProducts('all')" id="filterAll" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm">Semua</button>
-                        <button onclick="filterProducts('Alat Tulis')" id="filterAlat" class="px-4 py-2 rounded-full bg-gray-200 text-sm">Alat Tulis</button>
-                        <button onclick="filterProducts('Jasa')" id="filterJasa" class="px-4 py-2 rounded-full bg-gray-200 text-sm">Jasa</button>
-                        <button onclick="filterProducts('Perlengkapan')" id="filterPerlengkapan" class="px-4 py-2 rounded-full bg-gray-200 text-sm">Perlengkapan</button>
-                        <button onclick="filterProducts('Pakaian')" id="filterPakaian" class="px-4 py-2 rounded-full bg-gray-200 text-sm">Pakaian</button>
+            <div class="grid lg:grid-cols-4 gap-6">
+                <div class="lg:col-span-3">
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" id="productGrid">
+                        ${filtered.map(p => `
+                            <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+                                <div class="p-4">
+                                    <div class="text-6xl mb-2">${p.image}</div>
+                                    <h3 class="font-bold text-lg">${p.name}</h3>
+                                    <p class="text-xs text-gray-400">${p.category}</p>
+                                    <p class="text-purple-600 font-bold text-xl mt-2">Rp ${p.price.toLocaleString()}</p>
+                                    <p class="text-xs text-gray-400">Stok: ${p.stock} | Terjual: ${p.sold}</p>
+                                    <button onclick="addToCart(${p.id})" class="mt-3 w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg transition ${p.stock <= 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${p.stock <= 0 ? 'disabled' : ''}>+ Tambah ke Keranjang</button>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
-                    <div class="grid sm:grid-cols-2 gap-4" id="productGrid"></div>
                 </div>
                 <div>
-                    <div class="bg-white rounded-xl shadow-lg p-4 sticky top-20">
-                        <h3 class="font-bold text-lg mb-3">🛒 Ringkasan Belanja</h3>
+                    <div class="bg-white rounded-xl shadow-lg p-4 sticky top-24">
+                        <h3 class="font-bold text-lg mb-3">🛒 Keranjang Saya</h3>
                         <div id="cartSummary" class="max-h-80 overflow-y-auto"></div>
                         <div class="border-t pt-3 mt-3">
                             <p class="flex justify-between text-sm">Subtotal: <span>Rp ${subtotal.toLocaleString()}</span></p>
                             ${discount > 0 ? `<p class="flex justify-between text-sm text-green-600">Diskon Member: <span>-Rp ${discount.toLocaleString()}</span></p>` : ''}
-                            <p class="flex justify-between font-bold text-lg mt-2">Total: <span class="text-blue-600">Rp ${total.toLocaleString()}</span></p>
-                            <button onclick="goToCheckout()" class="w-full bg-green-600 text-white py-2 rounded-lg mt-3 font-semibold">Lanjut ke Checkout →</button>
+                            <p class="flex justify-between font-bold text-lg mt-2">Total: <span class="text-purple-600">Rp ${total.toLocaleString()}</span></p>
+                            <button onclick="goToCheckout()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg mt-3 font-semibold">Lanjut Checkout →</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     `;
-    
-    renderProducts("all");
     updateCartSummary();
 }
 
-function renderProducts(category) {
-    let grid = document.getElementById("productGrid");
-    if (!grid) return;
-    let filtered = category === "all" ? products : products.filter(p => p.category === category);
-    grid.innerHTML = filtered.map(p => `
-        <div class="bg-white rounded-xl shadow p-4 hover:shadow-lg transition">
-            <div class="text-5xl mb-2">${p.image}</div>
-            <h3 class="font-bold">${p.name}</h3>
-            <p class="text-xs text-gray-400">${p.category}</p>
-            <p class="text-blue-600 font-bold text-xl">Rp ${p.price.toLocaleString()}</p>
-            <p class="text-sm text-gray-500">Stok: ${p.stock}</p>
-            <button onclick="addToCart(${p.id})" class="mt-2 w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg transition ${p.stock <= 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${p.stock <= 0 ? 'disabled' : ''}>Tambah ke Keranjang</button>
-        </div>
-    `).join("");
-}
-
-window.filterProducts = function(category) {
-    let btns = ['all', 'Alat Tulis', 'Jasa', 'Perlengkapan', 'Pakaian'];
-    btns.forEach(c => {
-        let btn = document.getElementById(`filter${c.replace(/ /g, '')}`);
-        if (btn) {
-            btn.classList.remove('bg-blue-600', 'text-white');
-            btn.classList.add('bg-gray-200');
-        }
-    });
-    let activeBtn = document.getElementById(`filter${category.replace(/ /g, '')}`);
-    if (activeBtn) {
-        activeBtn.classList.remove('bg-gray-200');
-        activeBtn.classList.add('bg-blue-600', 'text-white');
-    }
-    renderProducts(category);
-};
-
-window.addToCart = function(productId) {
-    let product = products.find(p => p.id === productId);
-    if (!product || product.stock <= 0) {
-        alert("Stok habis!");
-        return;
-    }
-    let exist = cart.find(c => c.id === productId);
-    if (exist) {
-        exist.qty++;
-    } else {
-        cart.push({ ...product, qty: 1 });
-    }
-    renderHomeContent();
-};
-
 function updateCartSummary() {
     let summaryDiv = document.getElementById("cartSummary");
+    let badge = document.getElementById("cartBadge");
+    if (badge) badge.innerText = cart.reduce((s,i)=>s+i.qty,0);
     if (!summaryDiv) return;
     if (cart.length === 0) {
-        summaryDiv.innerHTML = '<p class="text-gray-400 text-center py-4">Keranjang kosong</p>';
+        summaryDiv.innerHTML = '<div class="text-center py-8"><i class="ri-shopping-cart-line text-5xl text-gray-300"></i><p class="text-gray-400 text-sm mt-2">Keranjang kosong</p></div>';
         return;
     }
     summaryDiv.innerHTML = cart.map(item => `
         <div class="flex justify-between items-center py-2 border-b">
-            <div>
-                <p class="font-medium text-sm">${item.name}</p>
-                <p class="text-xs text-gray-500">Rp ${item.price.toLocaleString()} x${item.qty}</p>
-            </div>
+            <div class="flex-1"><p class="font-medium text-sm">${item.name}</p><p class="text-xs text-gray-500">Rp ${item.price.toLocaleString()} x${item.qty}</p></div>
             <div class="flex items-center gap-2">
-                <button onclick="updateQty(${item.id}, ${item.qty - 1})" class="w-6 h-6 bg-gray-100 rounded-full">-</button>
+                <button onclick="updateCartQty(${item.id}, ${item.qty - 1})" class="w-7 h-7 bg-gray-100 rounded-full">-</button>
                 <span class="text-sm w-6 text-center">${item.qty}</span>
-                <button onclick="updateQty(${item.id}, ${item.qty + 1})" class="w-6 h-6 bg-gray-100 rounded-full">+</button>
+                <button onclick="updateCartQty(${item.id}, ${item.qty + 1})" class="w-7 h-7 bg-gray-100 rounded-full">+</button>
                 <button onclick="removeFromCart(${item.id})" class="text-red-500 ml-1"><i class="ri-delete-bin-line"></i></button>
             </div>
         </div>
     `).join("");
 }
 
-window.updateQty = function(productId, newQty) {
+window.addToCart = (productId) => {
+    let product = products.find(p => p.id === productId);
+    if (!product || product.stock <= 0) { showNotif("Stok habis!", "error"); return; }
+    let exist = cart.find(c => c.id === productId);
+    if (exist) exist.qty++;
+    else cart.push({ ...product, qty: 1 });
+    updateCartSummary();
+    showNotif(`✅ ${product.name} ditambahkan`, "success");
+    render();
+};
+
+window.updateCartQty = (productId, newQty) => {
     let item = cart.find(c => c.id === productId);
     let product = products.find(p => p.id === productId);
     if (item && product) {
-        if (newQty <= 0) {
-            cart = cart.filter(c => c.id !== productId);
-        } else if (newQty <= product.stock) {
-            item.qty = newQty;
-        } else {
-            alert(`Stok ${product.name} hanya ${product.stock}`);
-        }
-        renderHomeContent();
+        if (newQty <= 0) cart = cart.filter(c => c.id !== productId);
+        else if (newQty <= product.stock) item.qty = newQty;
+        else showNotif(`Stok ${product.name} hanya ${product.stock}`, "error");
+        updateCartSummary();
+        render();
     }
 };
 
-window.removeFromCart = function(productId) {
+window.removeFromCart = (productId) => {
     cart = cart.filter(c => c.id !== productId);
-    renderHomeContent();
+    updateCartSummary();
+    render();
 };
 
-function renderHomeContent() {
-    let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
-    let discPercent = currentUser.discount || 0;
-    let discount = subtotal * discPercent / 100;
-    let total = subtotal - discount;
-    
-    let subtotalEl = document.querySelector(".flex.justify-between.text-sm span");
-    if (subtotalEl) subtotalEl.innerText = `Rp ${subtotal.toLocaleString()}`;
-    
-    let totalEl = document.querySelector(".flex.justify-between.font-bold.text-lg span");
-    if (totalEl) totalEl.innerText = `Rp ${total.toLocaleString()}`;
-    
-    updateCartSummary();
-    
-    let cartCount = document.querySelector(".bg-blue-500");
-    if (cartCount) {
-        let count = cart.reduce((s, i) => s + i.qty, 0);
-        cartCount.innerHTML = `🛒 Cart (${count})`;
-    }
-}
-
-// ========== CHECKOUT PAGE ==========
+// ========== CHECKOUT ==========
 function renderCheckout(container) {
     let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
     let discPercent = currentUser.discount || 0;
@@ -325,72 +300,39 @@ function renderCheckout(container) {
     let afterDisc = subtotal - discount;
     
     container.innerHTML = `
-        <div class="container mx-auto px-4 py-8 max-w-2xl">
-            <button onclick="goBackHome()" class="text-blue-600 mb-4 flex items-center gap-1">← Kembali ke Toko</button>
+        <div class="container mx-auto px-4 py-8 max-w-3xl">
+            <div id="notificationContainer"></div>
+            <button onclick="goBackHome()" class="text-purple-600 mb-4">← Kembali</button>
             <div class="bg-white rounded-2xl shadow-xl p-6">
                 <h2 class="text-2xl font-bold mb-4">🧾 Checkout</h2>
                 <div class="border-b pb-3 mb-3">
-                    ${cart.map(item => `
-                        <div class="flex justify-between py-2">
-                            <span>${item.name} x${item.qty}</span>
-                            <span>Rp ${(item.price * item.qty).toLocaleString()}</span>
-                        </div>
-                    `).join('')}
+                    ${cart.map(item => `<div class="flex justify-between py-2"><span>${item.name} x${item.qty}</span><span>Rp ${(item.price * item.qty).toLocaleString()}</span></div>`).join('')}
                 </div>
-                <div class="mb-4">
-                    <p class="flex justify-between">Subtotal: <span>Rp ${subtotal.toLocaleString()}</span></p>
-                    ${discount > 0 ? `<p class="flex justify-between text-green-600">Diskon Member 20%: <span>-Rp ${discount.toLocaleString()}</span></p>` : ''}
-                    
-                    <div class="mt-4 pt-3 border-t">
-                        <label class="flex items-center justify-between py-2 cursor-pointer">
-                            <span>🎫 Booking Antrean Online <span class="text-red-500 text-sm">(biaya jam padat)</span></span>
-                            <input type="checkbox" id="queueFee" class="w-5 h-5">
-                        </label>
-                        <label class="flex items-center justify-between py-2 cursor-pointer">
-                            <span>🚚 Pesan Antar (Delivery)</span>
-                            <input type="checkbox" id="deliveryOption" class="w-5 h-5">
-                        </label>
-                        <div id="addressDiv" class="hidden mt-3">
-                            <input type="text" id="addressInput" placeholder="Masukkan alamat lengkap" class="w-full p-3 border rounded-lg">
-                        </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between"><span>Subtotal</span><span>Rp ${subtotal.toLocaleString()}</span></div>
+                    ${discount > 0 ? `<div class="flex justify-between text-green-600"><span>Diskon Member 20%</span><span>-Rp ${discount.toLocaleString()}</span></div>` : ''}
+                    <div class="border-t pt-3">
+                        <label class="flex items-center justify-between py-2 cursor-pointer"><span>🎫 Booking Antrean <span class="text-red-500">(+Rp2.000)</span></span><input type="checkbox" id="queueFee" class="w-5 h-5"></label>
+                        <label class="flex items-center justify-between py-2 cursor-pointer"><span>🚚 Pesan Antar (Delivery)</span><input type="checkbox" id="deliveryOption" class="w-5 h-5"></label>
+                        <div id="addressDiv" class="hidden mt-3"><textarea id="addressInput" rows="2" placeholder="Alamat lengkap untuk pengiriman" class="w-full p-3 border rounded-lg"></textarea></div>
                     </div>
-                    
-                    <div class="border-t pt-3 mt-3">
-                        <p class="flex justify-between font-bold text-xl">
-                            <span>Total Bayar:</span>
-                            <span id="finalTotal">Rp ${afterDisc.toLocaleString()}</span>
-                        </p>
-                        <button onclick="processCheckout()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold mt-4">✅ Konfirmasi & Bayar</button>
-                    </div>
+                    <div class="border-t pt-3"><div class="flex justify-between font-bold text-xl"><span>Total Bayar:</span><span id="finalTotal" class="text-purple-600">Rp ${afterDisc.toLocaleString()}</span></div>
+                    <button onclick="processCheckout()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold mt-4">✅ Konfirmasi & Bayar</button></div>
                 </div>
             </div>
         </div>
     `;
-    
     let queueChk = document.getElementById("queueFee");
     let deliveryChk = document.getElementById("deliveryOption");
     let addressDiv = document.getElementById("addressDiv");
-    
-    function updateTotal() {
-        let queue = queueChk.checked ? 2000 : 0;
-        let total = afterDisc + queue;
-        document.getElementById("finalTotal").innerHTML = "Rp " + total.toLocaleString();
-    }
-    
+    function updateTotal() { let queue = queueChk.checked ? 2000 : 0; document.getElementById("finalTotal").innerHTML = "Rp " + (afterDisc + queue).toLocaleString(); }
     queueChk.onchange = updateTotal;
-    deliveryChk.onchange = function() {
-        addressDiv.classList.toggle("hidden", !this.checked);
-        updateTotal();
-    };
+    deliveryChk.onchange = function() { addressDiv.classList.toggle("hidden", !this.checked); updateTotal(); };
     updateTotal();
 }
 
-window.processCheckout = function() {
-    if (cart.length === 0) {
-        alert("Keranjang kosong!");
-        return;
-    }
-    
+window.processCheckout = () => {
+    if (cart.length === 0) { showNotif("Keranjang kosong!", "error"); return; }
     let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
     let discPercent = currentUser.discount || 0;
     let discount = subtotal * discPercent / 100;
@@ -398,391 +340,327 @@ window.processCheckout = function() {
     let queueFee = document.getElementById("queueFee")?.checked ? 2000 : 0;
     let isDelivery = document.getElementById("deliveryOption")?.checked || false;
     let address = document.getElementById("addressInput")?.value || "";
-    
-    if (isDelivery && !address) {
-        alert("Masukkan alamat untuk pesan antar!");
-        return;
-    }
-    
+    if (isDelivery && !address) { showNotif("Masukkan alamat!", "error"); return; }
     let total = afterDisc + queueFee;
     let trxId = generateId();
     
-    let transaction = {
-        id: trxId,
-        userId: currentUser.id,
-        userName: currentUser.name,
-        items: [...cart],
-        subtotal: subtotal,
-        discount: discount,
-        queueFee: queueFee,
-        total: total,
-        delivery: isDelivery,
-        address: address,
-        date: new Date().toISOString()
-    };
-    
-    transactions.push(transaction);
-    
-    // Kurangi stok
-    cart.forEach(item => {
-        let p = products.find(prod => prod.id === item.id);
-        if (p) p.stock -= item.qty;
-    });
-    
-    if (isDelivery) {
-        deliveries.push({
-            trxId: trxId,
-            userName: currentUser.name,
-            status: "Sedang diproses",
-            location: "Toko",
-            address: address,
-            lastUpdate: new Date().toISOString()
-        });
-    }
-    
+    transactions.push({ id: trxId, userId: currentUser.id, userName: currentUser.name, items: [...cart], subtotal, discount, queueFee, total, delivery: isDelivery, address, date: new Date().toISOString() });
+    cart.forEach(item => { let p = products.find(prod => prod.id === item.id); if (p) { p.stock -= item.qty; p.sold += item.qty; } });
+    if (isDelivery) deliveries.push({ trxId, userId: currentUser.id, userName: currentUser.name, status: "Diproses", location: "Toko", address, lastUpdate: new Date().toISOString() });
     saveData();
-    alert(`✅ Transaksi Berhasil!\nID: ${trxId}\nTotal: Rp ${total.toLocaleString()}\n${isDelivery ? "🚚 Pesanan akan segera diantar!" : "🏪 Silakan ambil di toko"}`);
-    
+    showNotif(`✅ Transaksi Berhasil! ID: ${trxId}`, "success");
+    alert(`Transaksi Berhasil!\nID: ${trxId}\nTotal: Rp ${total.toLocaleString()}`);
     cart = [];
     currentPage = "home";
     render();
 };
 
-// ========== TRACKING PAGE ==========
+// ========== TRACKING, ORDERS, PROFILE ==========
 function renderTracking(container) {
-    let myDeliveries = deliveries.filter(d => d.userName === currentUser.name);
-    
-    container.innerHTML = `
-        <div class="container mx-auto px-4 py-8 max-w-2xl">
-            <button onclick="goBackHome()" class="text-blue-600 mb-4 flex items-center gap-1">← Kembali</button>
-            <h2 class="text-2xl font-bold mb-4">🚚 Lacak Pengiriman</h2>
-            ${myDeliveries.length === 0 ? 
-                '<div class="bg-white p-8 text-center rounded-xl">Belum ada pesanan dengan layanan antar</div>' :
-                myDeliveries.map(d => `
-                    <div class="bg-white rounded-xl shadow p-4 mb-4">
-                        <p class="font-bold">🔖 ID: ${d.trxId}</p>
-                        <p>📍 Alamat: ${d.address}</p>
-                        <div class="mt-2 p-3 bg-gray-50 rounded">
-                            <p>Status: <span class="font-bold text-blue-600">${d.status}</span></p>
-                            <p>Lokasi: ${d.location}</p>
-                            <p class="text-xs text-gray-400">Update: ${new Date(d.lastUpdate).toLocaleString()}</p>
-                        </div>
-                    </div>
-                `).join('')
-            }
-        </div>
-    `;
+    let myDeliveries = deliveries.filter(d => d.userId === currentUser.id);
+    container.innerHTML = `<div class="container mx-auto px-4 py-8 max-w-3xl"><button onclick="goBackHome()" class="text-purple-600 mb-4">← Kembali</button><h2 class="text-2xl font-bold mb-4">🚚 Lacak Pengiriman</h2>${myDeliveries.length === 0 ? '<div class="bg-white p-12 text-center rounded-xl"><i class="ri-truck-line text-6xl text-gray-300"></i><p class="text-gray-400">Belum ada pengiriman</p></div>' : myDeliveries.map(d => `<div class="bg-white rounded-xl shadow p-4 mb-4"><p class="font-bold">🔖 ${d.trxId}</p><p>📍 ${d.address}</p><p>Status: <span class="font-bold text-purple-600">${d.status}</span></p><p>Lokasi: ${d.location}</p><p class="text-xs text-gray-400">Update: ${new Date(d.lastUpdate).toLocaleString()}</p></div>`).join('')}</div>`;
 }
 
-// ========== PROFILE PAGE ==========
+function renderMyOrders(container) {
+    let myOrders = transactions.filter(t => t.userId === currentUser.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+    container.innerHTML = `<div class="container mx-auto px-4 py-8 max-w-4xl"><button onclick="goBackHome()" class="text-purple-600 mb-4">← Kembali</button><h2 class="text-2xl font-bold mb-4">📋 Pesanan Saya</h2>${myOrders.length === 0 ? '<div class="bg-white p-12 text-center rounded-xl"><i class="ri-shopping-bag-line text-6xl text-gray-300"></i><p class="text-gray-400">Belum ada pesanan</p></div>' : myOrders.map(order => `<div class="bg-white rounded-xl shadow p-4 mb-4"><div class="flex justify-between"><div><p class="font-bold">🔖 ${order.id}</p><p class="text-xs text-gray-400">${new Date(order.date).toLocaleString()}</p></div><div class="text-right"><p class="font-bold text-purple-600">Rp ${order.total.toLocaleString()}</p><p class="text-xs">${order.delivery ? '🚚 Antar' : '🏪 Ambil'}</p></div></div><div class="border-t mt-2 pt-2">${order.items.map(item => `<div class="flex justify-between text-sm py-1"><span>${item.name} x${item.qty}</span><span>Rp ${(item.price * item.qty).toLocaleString()}</span></div>`).join('')}</div></div>`).join('')}</div>`;
+}
+
 function renderProfile(container) {
     let userTrx = transactions.filter(t => t.userId === currentUser.id);
-    
-    container.innerHTML = `
-        <div class="container mx-auto px-4 py-8 max-w-2xl">
-            <button onclick="goBackHome()" class="text-blue-600 mb-4 flex items-center gap-1">← Kembali</button>
-            <div class="bg-white rounded-2xl shadow p-6">
-                <div class="text-center">
-                    <div class="text-6xl mb-2">${currentUser.avatar}</div>
-                    <h2 class="text-2xl font-bold">${currentUser.name}</h2>
-                    <p class="text-gray-500">${currentUser.email}</p>
-                </div>
-                <div class="border-t pt-4 mt-4">
-                    <p><strong>Role:</strong> ${currentUser.role === 'admin' ? 'Administrator' : 'Member'}</p>
-                    <p><strong>Status Member:</strong> ${currentUser.discount > 0 ? '🏅 Member Ustadz (Diskon 20%)' : 'Member Biasa'}</p>
-                    <p><strong>Total Transaksi:</strong> ${userTrx.length} kali</p>
-                    ${userTrx.length > 0 ? `<p><strong>Total Belanja:</strong> Rp ${userTrx.reduce((s, t) => s + t.total, 0).toLocaleString()}</p>` : ''}
-                </div>
-            </div>
-        </div>
-    `;
+    let totalSpent = userTrx.reduce((s, t) => s + t.total, 0);
+    container.innerHTML = `<div class="container mx-auto px-4 py-8 max-w-2xl"><button onclick="goBackHome()" class="text-purple-600 mb-4">← Kembali</button><div class="bg-white rounded-2xl shadow-xl overflow-hidden"><div class="gradient-bg p-6 text-center text-white"><div class="text-7xl mb-2">${currentUser.avatar}</div><h2 class="text-2xl font-bold">${currentUser.name}</h2><p>${currentUser.email}</p></div><div class="p-6"><div class="grid grid-cols-2 gap-4 mb-6"><div class="text-center p-3 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-purple-600">${userTrx.length}</p><p class="text-xs">Transaksi</p></div><div class="text-center p-3 bg-gray-50 rounded-lg"><p class="text-2xl font-bold text-purple-600">Rp ${totalSpent.toLocaleString()}</p><p class="text-xs">Total Belanja</p></div></div><div class="space-y-3"><div class="flex justify-between py-2 border-b"><span class="text-gray-500">Role</span><span>${currentUser.role === 'admin' ? 'Administrator' : 'Member'}</span></div><div class="flex justify-between py-2 border-b"><span class="text-gray-500">Status</span><span>${currentUser.discount > 0 ? '🏅 Member Ustadz (Diskon 20%)' : 'Member Biasa'}</span></div><div class="flex justify-between py-2 border-b"><span class="text-gray-500">Telepon</span><span>${currentUser.phone || '-'}</span></div></div></div></div></div>`;
 }
 
-// ========== ADMIN PANEL ==========
+// ========== ADMIN PANEL (FULL CRUD) ==========
 function renderAdmin(container) {
-    let totalSales = transactions.reduce((s, t) => s + t.total, 0);
-    let totalOrders = transactions.length;
-    let pendingDeliveries = deliveries.filter(d => d.status !== "Telah sampai tujuan").length;
-    
     container.innerHTML = `
-        <div class="bg-gray-900 text-white p-4">
-            <div class="container mx-auto flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <i class="ri-dashboard-line text-2xl"></i>
-                    <h1 class="text-xl font-bold">Admin Dashboard</h1>
-                </div>
-                <button onclick="goBackHome()" class="bg-gray-700 px-4 py-2 rounded-lg">← Kembali ke Toko</button>
+        <div id="notificationContainer"></div>
+        <div class="bg-gray-900 text-white sticky top-0 z-20">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center gap-3"><i class="ri-dashboard-line text-2xl"></i><h1 class="text-xl font-bold">Admin Dashboard</h1><span class="bg-yellow-500 text-gray-900 px-2 py-1 rounded text-xs">Super Admin</span></div>
+                <div class="flex gap-3"><button onclick="goBackHome()" class="bg-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-600">← Kembali ke Toko</button><button onclick="logout()" class="bg-red-600 px-4 py-2 rounded-lg text-sm">Logout</button></div>
             </div>
         </div>
-        
         <div class="container mx-auto px-4 py-8">
-            <!-- Stats Cards -->
-            <div class="grid md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white rounded-xl shadow p-4">
-                    <p class="text-gray-500 text-sm">Total Pendapatan</p>
-                    <p class="text-2xl font-bold text-green-600">Rp ${totalSales.toLocaleString()}</p>
-                </div>
-                <div class="bg-white rounded-xl shadow p-4">
-                    <p class="text-gray-500 text-sm">Total Pesanan</p>
-                    <p class="text-2xl font-bold text-blue-600">${totalOrders}</p>
-                </div>
-                <div class="bg-white rounded-xl shadow p-4">
-                    <p class="text-gray-500 text-sm">Pengiriman Aktif</p>
-                    <p class="text-2xl font-bold text-orange-600">${pendingDeliveries}</p>
-                </div>
-                <div class="bg-white rounded-xl shadow p-4">
-                    <p class="text-gray-500 text-sm">Total Produk</p>
-                    <p class="text-2xl font-bold text-purple-600">${products.length}</p>
-                </div>
+            <div class="flex gap-2 mb-6 border-b overflow-x-auto">
+                <button onclick="showAdminProducts()" id="tabProducts" class="px-5 py-2 font-semibold border-b-2 border-purple-600 text-purple-600">📦 Kelola Produk</button>
+                <button onclick="showAdminOrders()" id="tabOrders" class="px-5 py-2 font-semibold text-gray-500">📋 Pesanan</button>
+                <button onclick="showAdminDeliveries()" id="tabDeliveries" class="px-5 py-2 font-semibold text-gray-500">🚚 Pengiriman</button>
+                <button onclick="showAdminMembers()" id="tabMembers" class="px-5 py-2 font-semibold text-gray-500">👥 Member</button>
             </div>
-            
-            <!-- Tabs -->
-            <div class="flex gap-2 mb-4 border-b">
-                <button onclick="showAdminTab('products')" id="tabProducts" class="px-4 py-2 font-semibold border-b-2 border-blue-600 text-blue-600">📦 Produk</button>
-                <button onclick="showAdminTab('orders')" id="tabOrders" class="px-4 py-2 font-semibold text-gray-500">📋 Pesanan</button>
-                <button onclick="showAdminTab('deliveries')" id="tabDeliveries" class="px-4 py-2 font-semibold text-gray-500">🚚 Pengiriman</button>
-                <button onclick="showAdminTab('members')" id="tabMembers" class="px-4 py-2 font-semibold text-gray-500">👥 Member</button>
-            </div>
-            
-            <div id="adminContent"></div>
+            <div id="adminContent" class="fade-in"></div>
         </div>
     `;
-    
-    showAdminTab('products');
+    showAdminProducts();
 }
 
-window.showAdminTab = function(tab) {
-    // Update tab style
+// ========== ADMIN: MANAJEMEN PRODUK (TAMPIL, TAMBAH, EDIT, HAPUS) ==========
+function showAdminProducts() {
+    adminTab = "products";
     let tabs = ['products', 'orders', 'deliveries', 'members'];
     tabs.forEach(t => {
         let btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
-        if (btn) {
-            btn.classList.remove('border-blue-600', 'text-blue-600');
-            btn.classList.add('text-gray-500');
-        }
+        if (btn) { btn.classList.remove('border-purple-600', 'text-purple-600'); btn.classList.add('text-gray-500'); }
     });
-    let activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
-    if (activeBtn) {
-        activeBtn.classList.add('border-blue-600', 'text-blue-600');
-        activeBtn.classList.remove('text-gray-500');
-    }
+    let activeBtn = document.getElementById("tabProducts");
+    if (activeBtn) { activeBtn.classList.add('border-purple-600', 'text-purple-600'); activeBtn.classList.remove('text-gray-500'); }
     
     let content = document.getElementById("adminContent");
-    if (tab === 'products') {
-        content.innerHTML = `
-            <div class="bg-white rounded-xl shadow p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold">Kelola Produk</h3>
-                    <button onclick="addProduct()" class="bg-green-600 text-white px-4 py-2 rounded-lg">+ Tambah Produk</button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-100">
-                            <tr><th class="p-2 text-left">Produk</th><th class="p-2 text-left">Kategori</th><th class="p-2 text-right">Harga</th><th class="p-2 text-right">Stok</th><th class="p-2 text-center">Aksi</th></tr>
-                        </thead>
-                        <tbody>
-                            ${products.map(p => `
-                                <tr class="border-b">
-                                    <td class="p-2">${p.image} ${p.name}</td>
-                                    <td class="p-2">${p.category}</td>
-                                    <td class="p-2 text-right">Rp ${p.price.toLocaleString()}</td>
-                                    <td class="p-2 text-right">${p.stock}</td>
-                                    <td class="p-2 text-center">
-                                        <button onclick="editProduct(${p.id})" class="text-blue-600 mr-2">✏️</button>
-                                        <button onclick="deleteProduct(${p.id})" class="text-red-600">🗑️</button>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
+    content.innerHTML = `
+        <div class="bg-white rounded-xl shadow p-6">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h3 class="text-xl font-bold">📦 Manajemen Produk</h3>
+                <button onclick="showAddProductModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700">+ Tambah Produk Baru</button>
             </div>
-        `;
-    } else if (tab === 'orders') {
-        content.innerHTML = `
-            <div class="bg-white rounded-xl shadow p-6">
-                <h3 class="text-xl font-bold mb-4">Semua Pesanan</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-100">
-                            <tr><th class="p-2 text-left">ID</th><th class="p-2 text-left">Pembeli</th><th class="p-2 text-right">Total</th><th class="p-2 text-left">Tipe</th><th class="p-2 text-left">Tanggal</th></tr>
-                        </thead>
-                        <tbody>
-                            ${transactions.map(t => `
-                                <tr class="border-b">
-                                    <td class="p-2 text-sm">${t.id}</td>
-                                    <td class="p-2">${t.userName}</td>
-                                    <td class="p-2 text-right font-semibold">Rp ${t.total.toLocaleString()}</td>
-                                    <td class="p-2">${t.delivery ? '🚚 Antar' : '🏪 Ambil di Toko'} ${t.queueFee ? '+🎫' : ''}</td>
-                                    <td class="p-2 text-sm">${new Date(t.date).toLocaleDateString()}</td>
-                                </tr>
-                            `).join('')}
-                            ${transactions.length === 0 ? '<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada transaksi</td></tr>' : ''}
-                        </tbody>
-                    </table>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-100">
+                        <tr><th class="p-3 text-left">No</th><th class="p-3 text-left">Produk</th><th class="p-3 text-left">Kategori</th><th class="p-3 text-right">Harga</th><th class="p-3 text-right">Stok</th><th class="p-3 text-right">Terjual</th><th class="p-3 text-center">Aksi</th></tr>
+                    </thead>
+                    <tbody>
+                        ${products.map((p, index) => `
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-3">${index + 1}</td>
+                                <td class="p-3"><span class="text-2xl mr-2">${p.image}</span>${p.name}</td>
+                                <td class="p-3">${p.category}</td>
+                                <td class="p-3 text-right">Rp ${p.price.toLocaleString()}</td>
+                                <td class="p-3 text-right"><span class="${p.stock < 10 ? 'text-red-500 font-bold' : ''}">${p.stock}</span></td>
+                                <td class="p-3 text-right">${p.sold}</td>
+                                <td class="p-3 text-center">
+                                    <button onclick="showEditProductModal(${p.id})" class="text-blue-600 mr-2 hover:text-blue-800"><i class="ri-edit-line"></i> Edit</button>
+                                    <button onclick="deleteProductAdmin(${p.id})" class="text-red-600 hover:text-red-800"><i class="ri-delete-bin-line"></i> Hapus</button>
+                                 </td>
+                             </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-500">Total produk: ${products.length} | Total stok: ${products.reduce((s,p)=>s+p.stock,0)}</div>
+        </div>
+        
+        <!-- Modal Tambah Produk -->
+        <div id="addProductModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-md fade-in">
+                <h3 class="text-xl font-bold mb-4">+ Tambah Produk Baru</h3>
+                <div class="space-y-3">
+                    <input type="text" id="newProductName" placeholder="Nama Produk" class="w-full p-3 border rounded-lg">
+                    <input type="number" id="newProductPrice" placeholder="Harga (Rp)" class="w-full p-3 border rounded-lg">
+                    <input type="number" id="newProductStock" placeholder="Stok" class="w-full p-3 border rounded-lg">
+                    <select id="newProductCategory" class="w-full p-3 border rounded-lg">
+                        <option value="Alat Tulis">Alat Tulis</option><option value="Perlengkapan">Perlengkapan</option><option value="Jasa">Jasa</option><option value="Pakaian">Pakaian</option>
+                    </select>
+                    <div class="flex gap-2 mt-4"><button onclick="addProductAdmin()" class="flex-1 bg-green-600 text-white py-2 rounded-lg">Simpan</button><button onclick="closeAddProductModal()" class="flex-1 bg-gray-300 py-2 rounded-lg">Batal</button></div>
                 </div>
             </div>
-        `;
-    } else if (tab === 'deliveries') {
-        content.innerHTML = `
-            <div class="bg-white rounded-xl shadow p-6">
-                <h3 class="text-xl font-bold mb-4">Kelola Pengiriman</h3>
-                ${deliveries.length === 0 ? '<p class="text-gray-400 text-center py-8">Belum ada pengiriman</p>' : 
-                    deliveries.map(d => `
-                        <div class="border rounded-lg p-4 mb-3">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-bold">🔖 ${d.trxId}</p>
-                                    <p class="text-sm">Customer: ${d.userName}</p>
-                                    <p class="text-sm">Alamat: ${d.address}</p>
-                                    <p class="text-sm mt-1">Status: <span class="font-semibold text-blue-600">${d.status}</span></p>
-                                    <p class="text-xs text-gray-400">Lokasi: ${d.location}</p>
-                                </div>
-                                <button onclick="updateDeliveryStatus('${d.trxId}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Update Status →</button>
-                            </div>
-                        </div>
-                    `).join('')
-                }
-            </div>
-        `;
-    } else if (tab === 'members') {
-        let members = users.filter(u => u.role === 'member');
-        content.innerHTML = `
-            <div class="bg-white rounded-xl shadow p-6">
-                <h3 class="text-xl font-bold mb-4">Data Member</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-100">
-                            <tr><th class="p-2 text-left">Avatar</th><th class="p-2 text-left">Nama</th><th class="p-2 text-left">Email</th><th class="p-2 text-center">Status</th><th class="p-2 text-center">Aksi</th></tr>
-                        </thead>
-                        <tbody>
-                            ${members.map(m => `
-                                <tr class="border-b">
-                                    <td class="p-2 text-2xl">${m.avatar}</td>
-                                    <td class="p-2">${m.name}</td>
-                                    <td class="p-2">${m.email}</td>
-                                    <td class="p-2 text-center">${m.discount > 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">🏅 Member Ustadz</span>' : '<span class="bg-gray-100 px-2 py-1 rounded-full text-xs">Member Biasa</span>'}</td>
-                                    <td class="p-2 text-center">
-                                        <button onclick="toggleMemberDiscount(${m.id})" class="text-blue-600 text-sm">${m.discount > 0 ? 'Cabut Diskon' : 'Beri Diskon'}</button>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+        </div>
+        
+        <!-- Modal Edit Produk -->
+        <div id="editProductModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-md fade-in">
+                <h3 class="text-xl font-bold mb-4">✏️ Edit Produk</h3>
+                <input type="hidden" id="editProductId">
+                <div class="space-y-3">
+                    <input type="text" id="editProductName" placeholder="Nama Produk" class="w-full p-3 border rounded-lg">
+                    <input type="number" id="editProductPrice" placeholder="Harga (Rp)" class="w-full p-3 border rounded-lg">
+                    <input type="number" id="editProductStock" placeholder="Stok" class="w-full p-3 border rounded-lg">
+                    <select id="editProductCategory" class="w-full p-3 border rounded-lg">
+                        <option value="Alat Tulis">Alat Tulis</option><option value="Perlengkapan">Perlengkapan</option><option value="Jasa">Jasa</option><option value="Pakaian">Pakaian</option>
+                    </select>
+                    <div class="flex gap-2 mt-4"><button onclick="updateProductAdmin()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg">Update</button><button onclick="closeEditProductModal()" class="flex-1 bg-gray-300 py-2 rounded-lg">Batal</button></div>
                 </div>
             </div>
-        `;
+        </div>
+    `;
+}
+
+window.showAddProductModal = () => {
+    let modal = document.getElementById("addProductModal");
+    if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+};
+window.closeAddProductModal = () => {
+    let modal = document.getElementById("addProductModal");
+    if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+};
+window.showEditProductModal = (id) => {
+    let product = products.find(p => p.id === id);
+    if (product) {
+        document.getElementById("editProductId").value = id;
+        document.getElementById("editProductName").value = product.name;
+        document.getElementById("editProductPrice").value = product.price;
+        document.getElementById("editProductStock").value = product.stock;
+        document.getElementById("editProductCategory").value = product.category;
+        let modal = document.getElementById("editProductModal");
+        if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+    }
+};
+window.closeEditProductModal = () => {
+    let modal = document.getElementById("editProductModal");
+    if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+};
+
+// TAMBAH PRODUK (Admin)
+window.addProductAdmin = () => {
+    let name = document.getElementById("newProductName")?.value;
+    let price = parseInt(document.getElementById("newProductPrice")?.value);
+    let stock = parseInt(document.getElementById("newProductStock")?.value);
+    let category = document.getElementById("newProductCategory")?.value;
+    if (!name || !price || !stock) { alert("Semua field harus diisi!"); return; }
+    let newId = Math.max(...products.map(p => p.id), 0) + 1;
+    products.push({ id: newId, name, price, stock, category, image: "📦", sold: 0 });
+    saveData();
+    closeAddProductModal();
+    showAdminProducts();
+    showNotif(`✅ Produk "${name}" berhasil ditambahkan!`, "success");
+};
+
+// EDIT PRODUK (Admin)
+window.updateProductAdmin = () => {
+    let id = parseInt(document.getElementById("editProductId")?.value);
+    let name = document.getElementById("editProductName")?.value;
+    let price = parseInt(document.getElementById("editProductPrice")?.value);
+    let stock = parseInt(document.getElementById("editProductStock")?.value);
+    let category = document.getElementById("editProductCategory")?.value;
+    if (!name || !price || !stock) { alert("Semua field harus diisi!"); return; }
+    let product = products.find(p => p.id === id);
+    if (product) {
+        product.name = name;
+        product.price = price;
+        product.stock = stock;
+        product.category = category;
+        saveData();
+        closeEditProductModal();
+        showAdminProducts();
+        showNotif(`✅ Produk "${name}" berhasil diupdate!`, "success");
     }
 };
 
-// Admin Actions
-window.addProduct = function() {
-    let name = prompt("Nama produk:");
-    if (!name) return;
-    let price = parseInt(prompt("Harga (Rp):"));
-    let stock = parseInt(prompt("Stok:"));
-    let category = prompt("Kategori (Alat Tulis/Jasa/Perlengkapan/Pakaian):", "Alat Tulis");
-    products.push({
-        id: Date.now(),
-        name: name,
-        price: price,
-        stock: stock,
-        category: category,
-        image: "📦"
-    });
-    saveData();
-    showAdminTab('products');
-    alert("Produk ditambahkan!");
-};
-
-window.editProduct = function(id) {
-    let p = products.find(p => p.id === id);
-    if (!p) return;
-    let newPrice = parseInt(prompt("Harga baru:", p.price));
-    let newStock = parseInt(prompt("Stok baru:", p.stock));
-    if (!isNaN(newPrice)) p.price = newPrice;
-    if (!isNaN(newStock)) p.stock = newStock;
-    saveData();
-    showAdminTab('products');
-};
-
-window.deleteProduct = function(id) {
-    if (confirm("Yakin hapus produk ini?")) {
+// HAPUS PRODUK (Admin)
+window.deleteProductAdmin = (id) => {
+    let product = products.find(p => p.id === id);
+    if (confirm(`Yakin hapus produk "${product?.name}"?`)) {
         products = products.filter(p => p.id !== id);
         saveData();
-        showAdminTab('products');
+        showAdminProducts();
+        showNotif(`🗑️ Produk "${product?.name}" dihapus!`, "success");
     }
 };
 
-window.updateDeliveryStatus = function(trxId) {
+// ========== ADMIN: PESANAN ==========
+function showAdminOrders() {
+    let tabs = ['products', 'orders', 'deliveries', 'members'];
+    tabs.forEach(t => {
+        let btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (btn) { btn.classList.remove('border-purple-600', 'text-purple-600'); btn.classList.add('text-gray-500'); }
+    });
+    let activeBtn = document.getElementById("tabOrders");
+    if (activeBtn) { activeBtn.classList.add('border-purple-600', 'text-purple-600'); activeBtn.classList.remove('text-gray-500'); }
+    
+    let content = document.getElementById("adminContent");
+    content.innerHTML = `
+        <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-xl font-bold mb-4">📋 Semua Pesanan</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-100"><tr><th class="p-3 text-left">ID</th><th class="p-3 text-left">Pembeli</th><th class="p-3 text-right">Total</th><th class="p-3 text-left">Tipe</th><th class="p-3 text-left">Tanggal</th></tr></thead>
+                    <tbody>${transactions.map(t => `<tr class="border-b"><td class="p-3 text-sm">${t.id}</td><td class="p-3">${t.userName}</td><td class="p-3 text-right font-bold">Rp ${t.total.toLocaleString()}</td><td class="p-3">${t.delivery ? '🚚 Antar' : '🏪 Ambil'}</td><td class="p-3 text-sm">${new Date(t.date).toLocaleDateString()}</td></tr>`).join('')}</tbody>
+                </table>
+                ${transactions.length === 0 ? '<p class="text-center text-gray-400 py-8">Belum ada transaksi</p>' : ''}
+            </div>
+        </div>
+    `;
+}
+
+// ========== ADMIN: PENGIRIMAN ==========
+function showAdminDeliveries() {
+    let tabs = ['products', 'orders', 'deliveries', 'members'];
+    tabs.forEach(t => {
+        let btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (btn) { btn.classList.remove('border-purple-600', 'text-purple-600'); btn.classList.add('text-gray-500'); }
+    });
+    let activeBtn = document.getElementById("tabDeliveries");
+    if (activeBtn) { activeBtn.classList.add('border-purple-600', 'text-purple-600'); activeBtn.classList.remove('text-gray-500'); }
+    
+    let content = document.getElementById("adminContent");
+    content.innerHTML = `
+        <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-xl font-bold mb-4">🚚 Manajemen Pengiriman</h3>
+            ${deliveries.length === 0 ? '<p class="text-gray-400 text-center py-8">Belum ada pengiriman</p>' : deliveries.map(d => `
+                <div class="border rounded-lg p-4 mb-3">
+                    <div class="flex justify-between items-start flex-wrap gap-2">
+                        <div><p class="font-bold">🔖 ${d.trxId}</p><p class="text-sm">Customer: ${d.userName}</p><p class="text-sm">Alamat: ${d.address}</p><p class="text-sm mt-1">Status: <span class="font-semibold text-purple-600">${d.status}</span> | Lokasi: ${d.location}</p></div>
+                        <button onclick="updateDeliveryStatusAdmin('${d.trxId}')" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700">Update Status →</button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+window.updateDeliveryStatusAdmin = (trxId) => {
     let del = deliveries.find(d => d.trxId === trxId);
     if (del) {
-        let statuses = ["Sedang diproses", "Sedang dikemas", "Sedang diantar", "Telah sampai tujuan"];
+        let statuses = ["Diproses", "Dikemas", "Diantar", "Sampai"];
         let locations = ["Toko", "Gudang", "Dalam perjalanan", "Tujuan"];
         let idx = statuses.indexOf(del.status);
-        let newIdx = (idx + 1) % statuses.length;
-        del.status = statuses[newIdx];
-        del.location = locations[newIdx];
+        if (idx < statuses.length - 1) {
+            del.status = statuses[idx + 1];
+            del.location = locations[idx + 1];
+        } else {
+            del.status = "Sampai";
+            del.location = "Tujuan";
+        }
         del.lastUpdate = new Date().toISOString();
         saveData();
-        showAdminTab('deliveries');
-        alert(`Status diperbarui: ${del.status}`);
+        showAdminDeliveries();
+        showNotif(`Status diperbarui: ${del.status}`, "success");
     }
 };
 
-window.toggleMemberDiscount = function(userId) {
+// ========== ADMIN: MEMBER ==========
+function showAdminMembers() {
+    let tabs = ['products', 'orders', 'deliveries', 'members'];
+    tabs.forEach(t => {
+        let btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (btn) { btn.classList.remove('border-purple-600', 'text-purple-600'); btn.classList.add('text-gray-500'); }
+    });
+    let activeBtn = document.getElementById("tabMembers");
+    if (activeBtn) { activeBtn.classList.add('border-purple-600', 'text-purple-600'); activeBtn.classList.remove('text-gray-500'); }
+    
+    let members = users.filter(u => u.role === 'member');
+    let content = document.getElementById("adminContent");
+    content.innerHTML = `
+        <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-xl font-bold mb-4">👥 Manajemen Member</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-100"><tr><th class="p-3 text-left">Avatar</th><th class="p-3 text-left">Nama</th><th class="p-3 text-left">Email</th><th class="p-3 text-center">Status</th><th class="p-3 text-center">Aksi</th></tr></thead>
+                    <tbody>${members.map(m => `<tr class="border-b"><td class="p-3 text-2xl">${m.avatar}</td><td class="p-3">${m.name}</td><td class="p-3">${m.email}</td><td class="p-3 text-center">${m.discount > 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">🏅 Member Ustadz (20%)</span>' : '<span class="bg-gray-100 px-2 py-1 rounded-full text-xs">Member Biasa</span>'}</td><td class="p-3 text-center"><button onclick="toggleMemberDiscountAdmin(${m.id})" class="text-blue-600 text-sm">${m.discount > 0 ? 'Cabut Diskon' : 'Beri Diskon'}</button></td></tr>`).join('')}</tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+window.toggleMemberDiscountAdmin = (userId) => {
     let user = users.find(u => u.id === userId);
     if (user) {
-        if (user.discount > 0) {
-            user.discount = 0;
-            alert(`Diskon ${user.name} dicabut`);
-        } else {
-            user.discount = 20;
-            alert(`${user.name} sekarang mendapat diskon 20%!`);
-        }
+        user.discount = user.discount > 0 ? 0 : 20;
         saveData();
-        showAdminTab('members');
+        showAdminMembers();
+        showNotif(`Status ${user.name} diperbarui`, "success");
     }
 };
 
 // ========== NAVIGATION ==========
-window.goBackHome = function() {
-    currentPage = "home";
-    render();
-};
+window.goBackHome = () => { currentPage = "home"; render(); };
+window.goToCheckout = () => { if (cart.length === 0) { showNotif("Keranjang kosong!", "error"); return; } currentPage = "checkout"; render(); };
+window.goToTracking = () => { currentPage = "tracking"; render(); };
+window.goToProfile = () => { currentPage = "profile"; render(); };
+window.goToOrders = () => { currentPage = "orders"; render(); };
+window.goToAdmin = () => { currentPage = "admin"; render(); };
+window.logout = () => { currentUser = null; cart = []; currentPage = "landing"; render(); showNotif("Anda telah logout", "success"); };
 
-window.goToCheckout = function() {
-    if (cart.length === 0) {
-        alert("Keranjang kosong!");
-        return;
-    }
-    currentPage = "checkout";
-    render();
-};
-
-window.goToTracking = function() {
-    currentPage = "tracking";
-    render();
-};
-
-window.goToProfile = function() {
-    currentPage = "profile";
-    render();
-};
-
-window.goToAdmin = function() {
-    currentPage = "admin";
-    render();
-};
-
-window.logout = function() {
-    currentUser = null;
-    cart = [];
-    currentPage = "landing";
-    render();
-};
-
-// Start
 render();
 </script>
 </body>
